@@ -40,139 +40,154 @@ export default function Register() {
         setLoading(true);
         try {
             await axios.post(
-                "http://localhost:5000/api/auth/register",
+                `${process.env.REACT_APP_API_URL}/api/auth/register`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
 
-            showAlert("Registration successful", "success");
+            showAlert("Profile Initialized. Welcome to the Archive.", "success");
             setTimeout(() => {
                 window.location.href = "/login";
             }, 1000);
         } catch (err) {
-            showAlert("Registration failed");
+            showAlert(err.response?.data?.message || "Registration failed");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center bg-[#050505] px-4 pt-24 pb-10 overflow-hidden">
+        <div className="relative min-h-screen flex items-center justify-center bg-[var(--bg-primary)] px-4 pt-24 pb-10 overflow-hidden transition-colors duration-500">
             {/* Dynamic Background Glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-fuchsia-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[var(--accent)] opacity-10 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[var(--accent)] opacity-10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
 
             {/* Glass Card Container */}
-            <div className="relative w-full max-w-lg rounded-[2.5rem] bg-white/[0.02] backdrop-blur-[30px] shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/[0.08] p-8 md:p-12 z-10 before:absolute before:inset-0 before:rounded-[2.5rem] before:bg-gradient-to-br before:from-white/[0.05] before:to-transparent before:pointer-events-none">
+            <div className="relative w-full max-w-lg rounded-[2.5rem] bg-[var(--bg-secondary)] opacity-95 backdrop-blur-[30px] shadow-2xl border border-[var(--border)] p-8 md:p-12 z-10">
 
                 {/* Header & Logo */}
-                <div className="flex flex-col items-center mb-8">
+                <div className="flex flex-col items-center mb-8 text-left">
                     <div className="transform hover:scale-105 transition-transform duration-500">
                         <NovelHubLogo />
                     </div>
-                    <h2 className="text-md md:text-xl font-light text-gray-400 mt-2 tracking-widest uppercase">
-                        Create Your <span className="text-white font-bold">Character</span>
+                    <h2 className="text-[10px] font-black text-[var(--text-dim)] mt-4 tracking-[0.4em] uppercase">
+                        Generate New <span className="text-[var(--text-main)] italic">Entity</span>
                     </h2>
                 </div>
 
                 {/* Avatar Section */}
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-10">
                     <label className="relative cursor-pointer group">
-                        <div className="w-28 h-28 rounded-3xl border-2 border-white/10 flex items-center justify-center overflow-hidden bg-black/60 shadow-inner group-hover:border-blue-500/50 transition-all duration-300">
+                        <div className="w-32 h-32 rounded-[2.5rem] border-2 border-[var(--border)] flex items-center justify-center overflow-hidden bg-[var(--bg-primary)] shadow-2xl group-hover:border-[var(--accent)]/50 transition-all duration-500">
                             {preview ? (
-                                <img src={preview} alt="Avatar" className="w-full h-full object-cover" />
+                                <img src={preview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             ) : (
-                                <User className="text-gray-600 group-hover:text-blue-400 transition-colors" size={40} />
+                                <User className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors" size={48} />
                             )}
                         </div>
-                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg border border-white/10 group-hover:scale-110 transition-transform">
-                            <Camera className="text-white" size={18} />
+                        <div className="absolute -bottom-2 -right-2 w-11 h-11 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-xl border border-white/20 group-hover:scale-110 transition-transform">
+                            <Camera className="text-white" size={20} />
                         </div>
                         <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
                     </label>
                 </div>
 
                 {error && (
-                    <div className="mb-6 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-center tracking-wide">
-                        {error.toUpperCase()}
+                    <div className="mb-6 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-center tracking-widest uppercase">
+                        [ Error: {error} ]
                     </div>
                 )}
 
                 {/* Registration Form */}
-                <form onSubmit={registerHandler} className="space-y-4">
+                <form onSubmit={registerHandler} className="space-y-5">
                     
-                    <div className="grid grid-cols-1  gap-4">
+                    <div className="space-y-4">
                         {/* Username */}
-                        <div className="relative group">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400" size={18} />
-                            <input
-                                type="text"
-                                required
-                                placeholder="Username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black/40 border border-white/[0.05] text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
-                            />
+                        <div className="relative group text-left">
+                            <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1 mb-2 block">Entity ID</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Archive_User_01"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                />
+                            </div>
                         </div>
 
                         {/* Email */}
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400" size={18} />
-                            <input
-                                type="email"
-                                required
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black/40 border border-white/[0.05] text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
-                            />
+                        <div className="relative group text-left">
+                            <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1 mb-2 block">Uplink Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                <input
+                                    type="email"
+                                    required
+                                    placeholder="entity@network.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Password */}
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400" size={18} />
-                        <input
-                            type="password"
-                            required
-                            placeholder="Create Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black/40 border border-white/[0.05] text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-all"
-                        />
-                    </div>
+                        {/* Password */}
+                        <div className="relative group text-left">
+                            <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1 mb-2 block">Security Key</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                <input
+                                    type="password"
+                                    required
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                />
+                            </div>
+                        </div>
 
-                    {/* Confirm Password */}
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-pink-400" size={18} />
-                        <input
-                            type="password"
-                            required
-                            placeholder="Confirm Password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black/40 border border-white/[0.05] text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500/40 transition-all"
-                        />
+                        {/* Confirm Password */}
+                        <div className="relative group text-left">
+                            <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1 mb-2 block">Verify Key</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                <input
+                                    type="password"
+                                    required
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="relative w-full py-4 mt-4 rounded-2xl overflow-hidden group shadow-2xl"
+                        className="relative w-full py-5 mt-6 rounded-[1.5rem] overflow-hidden group shadow-xl transition-all active:scale-95"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 group-hover:scale-110 transition-transform duration-500"></div>
-                        <span className="relative z-10 text-white font-bold tracking-widest text-sm flex items-center justify-center gap-2">
-                            {loading ? "INITIALIZING..." : "START YOUR JOURNEY"}
-                            {!loading && <ArrowRight size={18} />}
+                        <div className="absolute inset-0 bg-[var(--accent)] hover:brightness-110 transition-all duration-500"></div>
+                        <span className="relative z-10 text-white font-black tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 uppercase">
+                            {loading ? "Initializing..." : "Register Entity"}
+                            {!loading && <ArrowRight size={14} />}
                         </span>
+                        <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(255,255,255,0.2)] pointer-events-none" />
                     </button>
                 </form>
 
-                <div className="text-center mt-8 text-gray-500 text-sm font-medium">
-                    Already a member?{" "}
-                    <a href="/login" className="text-blue-400 hover:text-blue-300 underline underline-offset-4 transition-colors">
-                        Sign in here
-                    </a>
+                <div className="text-center mt-10">
+                    <p className="text-[var(--text-dim)] text-[10px] font-bold uppercase tracking-widest">
+                        Already Synchronized?{" "}
+                        <a href="/login" className="text-[var(--accent)] hover:brightness-125 transition-all underline-offset-4 hover:underline">
+                            Access Terminal
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>

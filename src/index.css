@@ -1,27 +1,58 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* GLOBAL TRANSITION SETTINGS */
+  --theme-speed: 0.5s;
+  --theme-curve: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* DEFAULT: AMOLED BLACK */
+  --bg-primary: #020202;
+  --bg-secondary: #0a0a0a;
+  --text-main: #f8fafc;
+  --text-dim: #64748b;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+.theme-cyberpunk {
+  --bg-primary: #0d0221;
+  --bg-secondary: #19043d;
+  --text-main: #ffffff;
+  --text-dim: #a594f9;
+  --accent: #f472b6;
+  --accent-glow: rgba(244, 114, 182, 0.6);
+  --border: rgba(244, 114, 182, 0.2);
+}
+
+.theme-emerald {
+  --bg-primary: #020617;
+  --bg-secondary: #06261d;
+  --text-main: #ecfdf5;
+  --text-dim: #6ee7b7;
+  --accent: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.6);
+  --border: rgba(16, 185, 129, 0.2);
+}
+
+* {
+  transition: background-color var(--theme-speed) var(--theme-curve),
+              border-color var(--theme-speed) var(--theme-curve),
+              color var(--theme-speed) var(--theme-curve),
+              box-shadow var(--theme-speed) var(--theme-curve);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-/* Hide scrollbar but keep scroll */
-.no-scrollbar {
-  -ms-overflow-style: none;     /* IE & Edge */
-  scrollbar-width: none;        /* Firefox */
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;                /* Chrome, Safari */
-}
+/* Scrollbar Utility */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

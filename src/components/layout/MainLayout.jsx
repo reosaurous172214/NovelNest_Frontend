@@ -3,7 +3,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useEffect, useRef, useState } from "react";
 
-export default function MainLayout() {
+export default function MainLayout({ currentTheme, setTheme }) {
   const [showNavbar, setShowNavbar] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -27,10 +27,17 @@ export default function MainLayout() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar show={showNavbar} />
+    // We use the dynamic background variable here as well
+    <div className="flex flex-col min-h-screen bg-[var(--bg-primary)] transition-colors duration-500">
+      
+      {/* Passing theme props to Navbar */}
+      <Navbar 
+        show={showNavbar} 
+        currentTheme={currentTheme} 
+        setTheme={setTheme} 
+      />
 
-      {/* padding so content doesn't hide under navbar */}
+      {/* Main content area */}
       <main className="flex-1">
         <Outlet />
       </main>

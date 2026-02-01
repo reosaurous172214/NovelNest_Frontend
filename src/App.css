@@ -1,38 +1,71 @@
-.App {
-  text-align: center;
+/* index.css */
+:root {
+  --theme-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* AMOLED BLACK (Default) */
+  --bg-primary: #020202;
+  --bg-secondary: #0a0a0a;
+  --text-main: #f8fafc;
+  --text-dim: #64748b;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --border: rgba(255, 255, 255, 0.08);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* NEW: PURE LIGHT THEME */
+.theme-light {
+  --bg-primary: #f8fafc;      /* Soft White */
+  --bg-secondary: #ffffff;    /* Pure White Cards */
+  --text-main: #0f172a;       /* Deep Slate Text */
+  --text-dim: #64748b;        /* Slate Gray */
+  --accent: #2563eb;          /* Royal Blue */
+  --accent-glow: rgba(37, 99, 235, 0.2);
+  --border: rgba(15, 23, 42, 0.1);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* NEW: VINTAGE PAPER (CREAM) */
+.theme-cream {
+  --bg-primary: #fdf6e3;      /* Solarized Base */
+  --bg-secondary: #eee8d5;    /* Solarized Highlight */
+  --text-main: #073642;       /* Dark Teal Text */
+  --text-dim: #586e75;        /* Sage Gray */
+  --accent: #b58900;          /* Aged Gold */
+  --accent-glow: rgba(181, 137, 0, 0.2);
+  --border: rgba(7, 54, 66, 0.1);
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.theme-cyberpunk {
+  --bg-primary: #0d0221;
+  --bg-secondary: #19043d;
+  --text-main: #ffffff;
+  --text-dim: #a594f9;
+  --accent: #f472b6;
+  --accent-glow: rgba(244, 114, 182, 0.6);
+  --border: rgba(244, 114, 182, 0.2);
+}
+
+.theme-emerald {
+  --bg-primary: #020617;
+  --bg-secondary: #06261d;
+  --text-main: #ecfdf5;
+  --text-dim: #6ee7b7;
+  --accent: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.6);
+  --border: rgba(16, 185, 129, 0.2);
+}
+
+/* Apply the global transition to everything */
+* {
+  transition: var(--theme-transition);
+}
+
+/* Fix for selection color - now works in light & dark */
+::selection {
+  background-color: var(--accent);
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
 }

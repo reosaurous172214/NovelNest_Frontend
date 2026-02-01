@@ -1,226 +1,294 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Camera, ShieldCheck, PenTool, Save, Globe } from "lucide-react";
+import { Camera, Edit3, Lock, RefreshCw, User, Mail, Globe, Settings, ShieldCheck, Activity, Save, CheckCircle2 } from "lucide-react";
 import { useAlert } from "../context/AlertContext";
 
 export default function Profile() {
   const { showAlert } = useAlert();
+
   const [user, setUser] = useState(null);
   const [edit, setEdit] = useState(false);
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [activeTab, setActiveTab] = useState("Personal");
 
   const [form, setForm] = useState({
-    username: "",
-    email: "",
-    bio: "",
-    favoriteGenre: "",
-    password: "",
-    confirmPassword: "",
+    username: "", bio: "", mobile: "", country: "", state: "", city: "", timezone: "",
+    theme: "default", language: "en", matureContent: false, notifications: true,
+    showEmail: false, showMobile: false, showLocation: true,
+    currentPassword: "", newPassword: "", confirmPassword: "",
   });
 
-  // Load User Data on Mount
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("data"));
-    if (storedUser) {
-      setUser(storedUser);
-      setForm((prev) => ({
-        ...prev,
-        username: storedUser.username || "",
-        email: storedUser.email || "",
-        bio: storedUser.bio || "",
-        favoriteGenre: storedUser.favoriteGenre || "",
-      }));
-    }
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser(data);
+        setForm(prev => ({
+          ...prev,
+          username: data.username || "",
+          bio: data.bio || "",
+          mobile: data.mobile || "",
+          country: data.location?.country || "",
+          state: data.location?.state || "",
+          city: data.location?.city || "",
+          timezone: data.location?.timezone || "",
+          theme: data.preferences?.theme || "default",
+          language: data.preferences?.language || "en",
+          matureContent: data.preferences?.matureContent || false,
+          notifications: data.preferences?.notifications || true,
+          showEmail: data.privacy?.showEmail || false,
+          showMobile: data.privacy?.showMobile || false,
+          showLocation: data.privacy?.showLocation || true,
+        }));
+
+        setPreview(data.profilePicture ? `${process.env.REACT_APP_API_URL}${data.profilePicture}` : null);
+      } catch (err) {
+        showAlert("Unable to load profile.", "error");
+      }
+    };
+    fetchProfile();
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (preview) URL.revokeObjectURL(preview); // Clean memory
       setAvatar(file);
       setPreview(URL.createObjectURL(file));
     }
   };
 
-  const updateProfile = async () => {
-    if (form.password && form.password !== form.confirmPassword) {
-      return showAlert("Security mismatch: Passwords do not match", "error");
-    }
-
+  const handleSaveProfile = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
-      
-      formData.append("username", form.username);
-      formData.append("bio", form.bio);
-      formData.append("favoriteGenre", form.favoriteGenre);
-      if (form.password) formData.append("password", form.password);
+      Object.keys(form).forEach(key => {
+        if (!['currentPassword', 'newPassword', 'confirmPassword'].includes(key)) {
+            formData.append(key, form[key]);
+        }
+      });
       if (avatar) formData.append("profilePicture", avatar);
 
-      const { data } = await axios.put(
-        "http://localhost:5000/api/auth/updateProfile",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/updateProfile`, formData, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
 
-      // --- CRITICAL FIX: MERGE DATA ---
-      // We take the existing user object and overwrite ONLY the fields the server updated.
-      // This prevents 'role', 'history', etc., from being deleted.
-      const serverResponse = data.user || data;
-      const updatedUser = { ...user, ...serverResponse }; 
-
-      setUser(updatedUser);
-      localStorage.setItem("data", JSON.stringify(updatedUser));
-      
-      // Reset UI States
+      setUser(data);
       setEdit(false);
-      setPreview(null);
-      setAvatar(null);
-      setForm(f => ({ ...f, password: "", confirmPassword: "" })); 
-      showAlert("Personnel dossier updated successfully", "success");
+      showAlert("Profile updated successfully.", "success");
     } catch (err) {
-      showAlert(err.response?.data?.message || "Sync failed", "error");
+      showAlert("Failed to update profile.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user) return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-blue-400 font-mono tracking-widest uppercase">Loading Intelligence...</div>;
+  const handlePrivacyUpdate = async (field) => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/auth/privacy`,
+        { [field]: form[field] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUser({ ...user, privacy: data });
+      showAlert("Privacy settings updated.", "success");
+    } catch {
+      showAlert("Unable to update privacy settings.", "error");
+    }
+  };
 
-  const glassStyle = "bg-white/[0.02] backdrop-blur-[40px] border border-white/[0.08] shadow-2xl";
+  const handleChangePassword = async () => {
+    if (form.newPassword !== form.confirmPassword) return showAlert("Passwords do not match.", "error");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/changePassword`,
+        { currentPassword: form.currentPassword, newPassword: form.newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setForm({ ...form, currentPassword: "", newPassword: "", confirmPassword: "" });
+      showAlert("Password changed successfully.", "success");
+    } catch (err) {
+      showAlert(err.response?.data?.message || "Unable to change password.", "error");
+    }
+  };
+
+  if (!user) return <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] text-[var(--accent)] font-black uppercase tracking-[0.5em] animate-pulse">Syncing Identity...</div>;
+
+  const glassStyle = "bg-[var(--bg-secondary)] opacity-95 backdrop-blur-3xl border border-[var(--border)] rounded-[2.5rem]";
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white px-6 pb-20 pt-32 overflow-hidden font-sans antialiased">
-      {/* Structural Ambient Lighting */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/5 blur-[140px] rounded-full pointer-events-none" />
-
-      <div className="max-w-6xl mx-auto relative z-10">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-24 px-4 md:px-12 transition-colors duration-500 selection:bg-[var(--accent)]/20">
+      <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* TOP STATUS BAR */}
-        <div className={`mb-8 flex items-center justify-between p-6 rounded-[2rem] ${glassStyle}`}>
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
-              <ShieldCheck size={24} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase font-mono">Registry Status</p>
-              <p className="text-sm font-bold text-green-400 uppercase tracking-widest">Verified {user.role || "User"}</p>
-            </div>
+        {/* --- DYNAMIC HEADER --- */}
+        <div className={`${glassStyle} overflow-hidden shadow-2xl relative`}>
+          <div className="absolute inset-0 h-52 overflow-hidden">
+             <img 
+                src={preview || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"} 
+                className="w-full h-full object-cover blur-[80px] opacity-20 scale-125" 
+                alt=""
+             />
+             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-primary)]/40 to-[var(--bg-primary)]"></div>
           </div>
-          <div className="hidden md:block text-right">
-            <p className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase font-mono">Member Since</p>
-            <p className="text-sm font-bold">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Active"}</p>
-          </div>
-        </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          
-          {/* LEFT: IDENTITY CARD */}
-          <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center h-fit`}>
-            <div className="relative w-44 h-44 mx-auto mb-8">
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-3xl blur-2xl opacity-10"></div>
+          <div className="relative p-8 flex flex-col md:flex-row items-center md:items-end gap-8 pt-20">
+            <div className="relative group text-left">
+              <div className="absolute -inset-1 bg-[var(--accent)] rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
               <img
-                src={preview || (user.profilePicture?.startsWith('http') ? user.profilePicture : `http://localhost:5000${user.profilePicture}`) || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
-                alt="Avatar"
-                className="relative w-full h-full rounded-[2.5rem] object-cover border border-white/10 shadow-2xl"
+                src={preview || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"}
+                className="relative w-44 h-44 rounded-[2.2rem] object-cover border-4 border-[var(--bg-primary)] shadow-2xl"
+                alt="Profile"
               />
               {edit && (
-                <label className="absolute -bottom-3 -right-3 bg-indigo-600 p-3 rounded-2xl cursor-pointer hover:bg-indigo-500 transition-all shadow-xl border border-white/20">
+                <label className="absolute -bottom-2 -right-2 bg-[var(--accent)] p-3 rounded-2xl cursor-pointer hover:scale-110 transition-all shadow-xl border border-white/20">
                   <Camera size={20} className="text-white" />
                   <input type="file" hidden onChange={handleFileChange} />
                 </label>
               )}
             </div>
 
-            <h2 className="text-3xl font-black tracking-tighter italic uppercase">{user.username}</h2>
-            <div className="flex items-center justify-center gap-2 mt-2 text-gray-500">
-              <Globe size={14} />
-              <p className="text-xs font-bold uppercase tracking-widest">{user.email}</p>
+            <div className="flex-1 text-center md:text-left space-y-2">
+              <h1 className="text-4xl font-black tracking-tighter text-[var(--text-main)] uppercase italic">{user.username}</h1>
+              <p className="text-[var(--text-dim)] max-w-lg italic font-medium">{user.bio || "No biography provided."}</p>
             </div>
-
-            <div className="mt-8 pt-8 border-t border-white/5">
-                 <button
-                   onClick={() => setEdit(!edit)}
-                   className={`w-full py-4 rounded-2xl transition-all font-black text-[10px] tracking-[0.3em] uppercase ${edit ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-white/[0.05] border border-white/10 hover:bg-white/10'}`}
-                 >
-                   {edit ? "Cancel Editing" : "Edit Credentials"}
-                 </button>
+            
+            <div className="hidden md:block text-right pb-2">
+                <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 text-right">Sync Integrity</p>
+                <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-[var(--accent)] shadow-[0_0_15px_var(--accent-glow)]" style={{ width: '88%' }}></div>
+                </div>
             </div>
           </div>
 
-          {/* RIGHT: DATA GRID */}
-          <div className={`lg:col-span-2 ${glassStyle} rounded-[2.5rem] p-10 md:p-14`}>
-            {!edit ? (
-              <div className="space-y-12">
-                <section>
-                  <h3 className="text-[11px] font-black tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-white/5 pb-4 font-mono">Dossier Overview</h3>
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <InfoField label="Favorite Sector" value={user.favoriteGenres || "Universal"} />
-                    <InfoField label="Archived Files" value={user.bookmarks?.length || 0} />
-                    <InfoField label="Registry Activity" value={user.history?.length || 0} />
-                    <InfoField label="System Auth" value={user.role || "Member"} />
-                  </div>
-                </section>
+          {/* --- TAB NAVIGATION --- */}
+          <nav className="flex px-8 mt-6 border-t border-[var(--border)] overflow-x-auto no-scrollbar bg-black/5">
+            {[
+              {id: "Personal", icon: <User size={14}/>},
+              {id: "Contact", icon: <Globe size={14}/>},
+              {id: "Preferences", icon: <Settings size={14}/>},
+              {id: "Privacy", icon: <ShieldCheck size={14}/>},
+              {id: "Stats", icon: <Activity size={14}/>},
+              {id: "Password", icon: <Lock size={14}/>},
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-5 text-[11px] font-black uppercase tracking-widest transition-all relative ${
+                  activeTab === tab.id ? "text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text-main)]"
+                }`}
+              >
+                {tab.icon} {tab.id}
+                {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]" />}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-                <section>
-                  <h3 className="text-[11px] font-black tracking-[0.4em] text-purple-400 uppercase mb-8 border-b border-white/5 pb-4 font-mono">Personnel Bio</h3>
-                  <p className="text-gray-400 leading-relaxed font-medium italic text-[15px]">
-                    {user.bio || "No biography provided in records."}
-                  </p>
-                </section>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <PenTool className="text-blue-500" size={20} />
-                  <h3 className="text-xl font-black tracking-tight uppercase">Update Personnel Registry</h3>
-                </div>
-                
-                <div className="grid sm:grid-cols-2 gap-8">
-                  <InputField label="Public Username" name="username" value={form.username} onChange={handleChange} />
-                  <InputField label="Preferred Genre" name="favoriteGenre" value={form.favoriteGenre} onChange={handleChange} />
-                </div>
+        {/* --- MAIN CONTENT GRID --- */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-2">Biography</label>
-                  <textarea
-                    name="bio"
-                    value={form.bio}
-                    onChange={handleChange}
-                    rows="4"
-                    className="w-full bg-black/40 border border-white/5 rounded-2xl p-5 text-gray-200 focus:outline-none focus:border-blue-500 transition-all text-sm"
-                    placeholder="Enter professional bio..."
-                  />
-                </div>
-
-                <div className="pt-8 border-t border-white/5">
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6 font-mono">Security Override</p>
-                  <div className="grid sm:grid-cols-2 gap-8">
-                    <InputField type="password" label="New Access Key" name="password" value={form.password} onChange={handleChange} />
-                    <InputField type="password" label="Confirm Access Key" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
-                  </div>
-                </div>
-
-                <button
-                  onClick={updateProfile}
-                  disabled={loading}
-                  className="w-full mt-10 bg-white text-black py-5 rounded-[1.5rem] font-black tracking-[0.2em] text-xs uppercase hover:bg-blue-50 transition-all shadow-2xl flex items-center justify-center gap-3 disabled:opacity-50"
-                >
-                  <Save size={16} /> {loading ? "Synchronizing..." : "Commit Changes"}
-                </button>
-              </div>
+            {activeTab === "Personal" && (
+              <TabWrapper title="Personal Data" edit={edit} toggleEdit={() => setEdit(!edit)}>
+                <InputField label="Identity Tag" name="username" value={form.username} onChange={handleChange} edit={edit} />
+                <TextAreaField label="User Biography" name="bio" value={form.bio} onChange={handleChange} edit={edit} />
+                {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
+              </TabWrapper>
             )}
+
+            {activeTab === "Contact" && (
+              <TabWrapper title="Uplink Information" edit={edit} toggleEdit={() => setEdit(!edit)}>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <InputField label="Secure Email" value={user.email} edit={false} />
+                  <InputField label="Mobile Comm" name="mobile" value={form.mobile} onChange={handleChange} edit={edit} />
+                  <InputField label="Country Sector" name="country" value={form.country} onChange={handleChange} edit={edit} />
+                  <InputField label="Temporal Zone" name="timezone" value={form.timezone} onChange={handleChange} edit={edit} />
+                </div>
+                {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
+              </TabWrapper>
+            )}
+
+            {activeTab === "Preferences" && (
+              <TabWrapper title="System Interface" edit={edit} toggleEdit={() => setEdit(!edit)}>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <SelectField label="Visual Theme" name="theme" value={form.theme} onChange={handleChange} edit={edit} options={["default","cyberpunk","emerald"]}/>
+                    <SelectField label="Interface Language" name="language" value={form.language} onChange={handleChange} edit={edit} options={["en","es","fr","jp"]}/>
+                </div>
+                <div className="flex flex-col gap-5 mt-4">
+                    <CheckboxField label="Enable Mature Data Extraction" name="matureContent" checked={form.matureContent} onChange={handleChange} edit={edit}/>
+                    <CheckboxField label="Enable Push Notifications" name="notifications" checked={form.notifications} onChange={handleChange} edit={edit}/>
+                </div>
+                {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
+              </TabWrapper>
+            )}
+
+            {activeTab === "Privacy" && (
+              <TabWrapper title="Privacy Protocols">
+                <div className="space-y-6">
+                    <CheckboxField label="Broadcast Email Publicly" name="showEmail" checked={form.showEmail} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showEmail")}}/>
+                    <CheckboxField label="Broadcast Mobile Number" name="showMobile" checked={form.showMobile} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showMobile")}}/>
+                    <CheckboxField label="Expose Location Metadata" name="showLocation" checked={form.showLocation} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showLocation")}}/>
+                </div>
+              </TabWrapper>
+            )}
+
+            {activeTab === "Stats" && (
+              <TabWrapper title="Activity Metrics">
+                <div className="space-y-8">
+                    <DataBar label="Knowledge Base Extracted" value={user.readingStats?.totalNovelsRead || 12} max={100} color="bg-[var(--accent)]" />
+                    <DataBar label="Contribution Level" value={65} max={100} color="bg-indigo-500" />
+                    <div className="pt-4 border-t border-[var(--border)]">
+                        <DataRow label="Last Uplink" value={new Date(user.readingStats?.lastActiveAt).toLocaleDateString()}/>
+                        <DataRow label="Account Created" value={new Date(user.createdAt).toLocaleDateString()}/>
+                    </div>
+                </div>
+              </TabWrapper>
+            )}
+
+            {activeTab === "Password" && (
+              <TabWrapper title="Security Override">
+                <div className="space-y-6">
+                    <InputField label="Current Key" type="password" name="currentPassword" value={form.currentPassword} onChange={handleChange} />
+                    <InputField label="New Security Key" type="password" name="newPassword" value={form.newPassword} onChange={handleChange} />
+                    <InputField label="Verify New Key" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
+                    <button onClick={handleChangePassword} className="w-full bg-red-500/10 border border-red-500/20 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3">
+                        <Lock size={14}/> Rewrite Security Key
+                    </button>
+                </div>
+              </TabWrapper>
+            )}
+
+          </div>
+
+          {/* SIDEBAR */}
+          <div className="space-y-6">
+             <div className={`${glassStyle} p-8 space-y-8 text-left`}>
+                <h4 className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.4em]">Node Status</h4>
+                <div className="flex items-center gap-4 p-5 bg-[var(--bg-primary)] rounded-[1.5rem] border border-[var(--border)]">
+                    <CheckCircle2 className="text-[var(--accent)]" size={24} />
+                    <div>
+                        <p className="text-xs font-black text-[var(--text-main)] uppercase tracking-tight">Verified Entity</p>
+                        <p className="text-[9px] text-[var(--text-dim)] uppercase font-mono tracking-widest mt-1">Trust Status: Optimal</p>
+                    </div>
+                </div>
+                <div className="space-y-5 pt-6 border-t border-[var(--border)]">
+                    <DataRow label="Data Integrity" value="Stable" />
+                    <DataRow label="Archive Sector" value={form.country || "GLOBAL"} />
+                    <DataRow label="Role" value={user.role || "Reader"} />
+                </div>
+             </div>
           </div>
         </div>
       </div>
@@ -228,19 +296,70 @@ export default function Profile() {
   );
 }
 
-const InfoField = ({ label, value }) => (
-  <div className="bg-white/[0.01] border-l-2 border-white/5 p-4 pl-6">
-    <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] mb-1 font-mono">{label}</p>
-    <p className="text-base font-bold text-gray-200 uppercase tracking-tight">{value}</p>
+/* ---------------- UI SUB-COMPONENTS (Dynamic) ---------------- */
+
+const TabWrapper = ({ title, children, edit, toggleEdit }) => (
+  <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2.5rem] p-10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 text-left relative overflow-hidden">
+    <div className="flex justify-between items-center mb-10">
+      <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-dim)]">{title}</h3>
+      {toggleEdit && (
+        <button onClick={toggleEdit} className="p-3 bg-[var(--bg-primary)] rounded-2xl hover:border-[var(--accent)] transition-all border border-[var(--border)] group">
+          <Edit3 size={18} className={edit ? "text-[var(--accent)]" : "text-[var(--text-dim)] group-hover:text-[var(--text-main)]"} />
+        </button>
+      )}
+    </div>
+    <div className="space-y-8">{children}</div>
   </div>
 );
 
-const InputField = ({ label, ...props }) => (
-  <div className="space-y-3">
-    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-2 font-mono">{label}</label>
-    <input
-      {...props}
-      className={`w-full px-6 py-4 rounded-2xl bg-black/40 border border-white/5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all ${props.disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-    />
+const InputField = ({ label, edit=true, ...props }) => (
+  <div className="space-y-3 text-left">
+    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
+    <input {...props} disabled={!edit} className={`w-full px-6 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}/>
+  </div>
+);
+
+const TextAreaField = ({ label, edit=true, ...props }) => (
+  <div className="space-y-3 text-left">
+    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
+    <textarea {...props} disabled={!edit} rows="4" className={`w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-[2rem] p-6 text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}/>
+  </div>
+);
+
+const SelectField = ({ label, options, edit=true, ...props }) => (
+  <div className="space-y-3 text-left">
+    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
+    <select {...props} disabled={!edit} className={`w-full px-6 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all uppercase font-bold tracking-tight ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}>
+      {options.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)]">{opt.toUpperCase()}</option>)}
+    </select>
+  </div>
+);
+
+const CheckboxField = ({ label, edit=true, ...props }) => (
+  <label className="flex items-center gap-4 cursor-pointer select-none group">
+    <input type="checkbox" disabled={!edit} {...props} className="w-5 h-5 accent-[var(--accent)] rounded-lg cursor-pointer"/>
+    <span className={`text-xs font-black uppercase tracking-widest ${!edit ? "opacity-40" : "text-[var(--text-dim)] group-hover:text-[var(--text-main)]"}`}>{label}</span>
+  </label>
+);
+
+const SaveButton = ({ loading, onClick }) => (
+  <button onClick={onClick} disabled={loading} className="w-full bg-[var(--accent)] hover:brightness-110 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all shadow-xl shadow-[var(--accent-glow)]">
+    <Save size={16}/>{loading ? "Synchronizing..." : "Overwrite Identity Data"}
+  </button>
+);
+
+const DataBar = ({ label, value, max=100, color }) => (
+  <div className="space-y-3 text-left">
+    <p className="text-[10px] font-black uppercase text-[var(--text-dim)] tracking-[0.2em]">{label}</p>
+    <div className="w-full bg-[var(--bg-primary)] rounded-full h-3 border border-[var(--border)]">
+      <div style={{ width: `${(value/max)*100}%` }} className={`h-full rounded-full ${color} shadow-[0_0_15px_var(--accent-glow)] transition-all duration-1000`}></div>
+    </div>
+  </div>
+);
+
+const DataRow = ({ label, value }) => (
+  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-3">
+    <span className="text-[var(--text-dim)]">{label}</span>
+    <span className="text-[var(--text-main)]">{value}</span>
   </div>
 );

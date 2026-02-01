@@ -6,7 +6,11 @@ const NovelHubLogo = () => {
       viewBox="0 0 320 80" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
-      className="h-10 md:h-14 w-auto drop-shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+      className="h-10 md:h-14 w-auto transition-all duration-500"
+      style={{
+        // Uses the dynamic glow variable from your CSS
+        filter: `drop-shadow(0 0 12px var(--accent-glow))`
+      }}
     >
       <defs>
         {/* Frosted Glass Filter */}
@@ -15,57 +19,50 @@ const NovelHubLogo = () => {
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
         
-        {/* VIBRANT BLUE TO PURPLE GRADIENT */}
-        <linearGradient id="bluePurpleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#3B82F6" /> {/* Electric Blue */}
-          <stop offset="50%" stopColor="#8B5CF6" /> {/* Vibrant Violet */}
-          <stop offset="100%" stopColor="#D946EF" /> {/* Fuchsia/Purple */}
-        </linearGradient>
-
-        {/* Glass Background */}
+        {/* Glass Background - Adapts to current theme background */}
         <linearGradient id="glassFill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="white" stopOpacity="0.03" />
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
         </linearGradient>
       </defs>
 
-      {/* 1. Glass Icon Base */}
+      {/* 1. Glass Icon Base - Dimensions unchanged, border color is dynamic */}
       <rect 
         x="5" y="10" width="60" height="60" rx="14" 
         fill="url(#glassFill)" 
-        stroke="rgba(255,255,255,0.25)" 
+        stroke="var(--border)" 
         strokeWidth="1.5"
         filter="url(#glassEffect)"
       />
 
-      {/* 2. Modern Book Icon with Blue/Purple Stroke */}
+      {/* 2. Book Icon - Now uses the theme's ACCENT color */}
       <path 
         d="M20 25C20 22 24 20 35 20C46 20 50 22 50 25V55C50 58 46 60 35 60C24 60 20 58 20 55V25Z" 
-        stroke="url(#bluePurpleGrad)" 
+        stroke="var(--accent)" 
         strokeWidth="4" 
         strokeLinejoin="round"
       />
-      <path d="M35 20V60" stroke="url(#bluePurpleGrad)" strokeWidth="2.5" opacity="0.5"/>
-      <path d="M28 35L35 30L42 35" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M35 20V60" stroke="var(--accent)" strokeWidth="2.5" opacity="0.4"/>
+      <path d="M28 35L35 30L42 35" stroke="var(--text-main)" strokeWidth="2.5" strokeLinecap="round"/>
 
-      {/* 3. BOLDER TYPOGRAPHY */}
+      {/* 3. TYPOGRAPHY - NOVEL stays main color, NEST takes the accent color */}
       <text 
         x="75" y="55" 
         fontFamily="Arial Black, Gadget, sans-serif" 
         fontWeight="900" 
         fontSize="42" 
-        fill="white"
+        fill="var(--text-main)"
         letterSpacing="-2"
       >
-        Novel<tspan fill="url(#bluePurpleGrad)">Nest</tspan>
+        Novel<tspan fill="var(--accent)">Nest</tspan>
       </text>
 
-      {/* 4. Tagline */}
+      {/* 4. Tagline - Uses the dimmed text variable for better hierarchy */}
       <text 
         x="78" y="72" 
         fontFamily="Verdana, sans-serif" 
         fontSize="9" 
-        fill="rgba(255,255,255,0.4)" 
+        fill="var(--text-dim)" 
         fontWeight="bold"
         letterSpacing="2.8"
         style={{ textTransform: 'uppercase' }}

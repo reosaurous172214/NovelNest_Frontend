@@ -1,150 +1,74 @@
 import axios from "axios";
-import { useState } from "react";
-import { BookOpen, ImageIcon } from "lucide-react";
+import { useState, useMemo } from "react";
+import { BookOpen, ImageIcon, X, UploadCloud, Search } from "lucide-react";
 
-const GENRES = [
-  "Fantasy",
-  "Romance",
-  "Action",
-  "Adventure",
-  "Sci-Fi",
-  "Mystery",
-  "Thriller",
-  "Horror",
-  "Drama",
-  "Comedy",
-  "Slice of Life",
-  "Supernatural",
-  "Historical",
-  "Isekai",
-  "LitRPG",
-  "Cultivation",
-  "Martial Arts",
-  "Psychological",
-  "Tragedy",
-  "Mythology",
-  "Post-Apocalyptic",
-  "Cyberpunk",
-  "Steampunk",
-  "Dark Fantasy",
-  "Urban Fantasy",
-  "War",
-  "Politics"
-];
-const TAGS = [
-  // Story style
-  "Slow Burn",
-  "Fast Paced",
-  "Character Driven",
-  "Plot Heavy",
-  "World Building",
-  "Short Chapters",
-  "Long Chapters",
-
-  // Themes
-  "Revenge",
-  "Redemption",
-  "Betrayal",
-  "Friendship",
-  "Love Triangle",
-  "Found Family",
-  "Coming of Age",
-  "Survival",
-  "Power Struggle",
-  "Politics",
-  "War",
-
-  // Tone / Mood
-  "Dark",
-  "Light Hearted",
-  "Emotional",
-  "Wholesome",
-  "Gritty",
-  "Tragic",
-  "Hopeful",
-
-  // Character types
-  "Strong Female Lead",
-  "Anti Hero",
-  "Villain MC",
-  "Overpowered MC",
-  "Weak to Strong",
-  "Genius MC",
-  "Morally Grey",
-
-  // Plot devices
-  "Time Loop",
-  "Reincarnation",
-  "Regression",
-  "Multiple POV",
-  "First Person",
-  "Unreliable Narrator",
-  "Twists",
-  "Cliffhangers",
-
-  // Relationship dynamics
-  "Enemies to Lovers",
-  "Friends to Lovers",
-  "Slow Romance",
-  "No Romance",
-  "Harem",
-  "Reverse Harem",
-
-  // Reader experience
-  "Binge Worthy",
-  "Addictive",
-  "Easy Read",
-  "Thought Provoking"
-];
-
+// It's best practice to keep these in a constants.js file
+const GENRES = ["Fantasy", "Romance", "Action", "Adventure", "Sci-Fi", "Mystery", "Thriller", "Horror", "Drama", "Comedy", "Slice of Life", "Supernatural", "Historical", "Isekai", "LitRPG", "Cultivation", "Martial Arts", "Psychological", "Tragedy", "Mythology", "Post-Apocalyptic", "Cyberpunk", "Steampunk", "Dark Fantasy", "Urban Fantasy", "War", "Politics"];
+const TAGS = ["Slow Burn", "Fast Paced", "Character Driven", "Plot Heavy", "World Building", "Short Chapters", "Long Chapters", "Revenge", "Redemption", "Betrayal", "Friendship", "Love Triangle", "Found Family", "Coming of Age", "Survival", "Power Struggle", "Politics", "War", "Dark", "Light Hearted", "Emotional", "Wholesome", "Gritty", "Tragic", "Hopeful", "Strong Female Lead", "Anti Hero", "Villain MC", "Overpowered MC", "Weak to Strong", "Genius MC", "Morally Grey", "Time Loop", "Reincarnation", "Regression", "Multiple POV", "First Person", "Unreliable Narrator", "Twists", "Cliffhangers", "Enemies to Lovers", "Friends to Lovers", "Slow Romance", "No Romance", "Harem", "Reverse Harem", "Binge Worthy", "Addictive", "Easy Read", "Thought Provoking"];
 
 export default function CreateNovel() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [genres, setGenres] = useState([]);
-  const [tags, setTags] = useState([]);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    genres: [],
+    tags: [],
+  });
   const [coverImage, setCoverImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState({ genre: "", tag: "" });
 
-  const toggleGenre = (genre) => {
-    setGenres((prev) =>
-      prev.includes(genre)
-        ? prev.filter((g) => g !== genre)
-        : [...prev, genre]
-    );
+  // Handle Text Inputs
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const toggleTag = (tag) => {
-    setTags((prev) =>
-      prev.includes(tag)
-        ? prev.filter((t) => t !== tag)
-        : [...prev, tag]
-    );
+
+  // Image Preview Logic
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
+
+  const toggleItem = (listName, item) => {
+    setFormData((prev) => ({
+      ...prev,
+      [listName]: prev[listName].includes(item)
+        ? prev[listName].filter((i) => i !== item)
+        : [...prev[listName], item],
+    }));
+  };
+
+  // Filtered Lists for Search
+  const filteredGenres = useMemo(() => 
+    GENRES.filter(g => g.toLowerCase().includes(searchTerm.genre.toLowerCase())), 
+  [searchTerm.genre]);
+
+  const filteredTags = useMemo(() => 
+    TAGS.filter(t => t.toLowerCase().includes(searchTerm.tag.toLowerCase())), 
+  [searchTerm.tag]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    if (formData.genres.length === 0) return alert("Please select at least one genre");
+    
     setLoading(true);
-
     const data = new FormData();
-    data.append("title", title);
-    data.append("description", description);
-    data.append("genres", JSON.stringify(genres));
-    data.append("tags", JSON.stringify(tags));
+    Object.keys(formData).forEach(key => {
+      data.append(key, Array.isArray(formData[key]) ? JSON.stringify(formData[key]) : formData[key]);
+    });
     data.append("coverImage", coverImage);
 
     try {
-      await axios.post(
-        "http://localhost:5000/api/novels/create",
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      alert("Novel created successfully");
+      await axios.post("http://localhost:5000/api/novels/create", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      alert("Novel created successfully ✨");
       window.location.href = "/";
     } catch (err) {
       alert(err.response?.data?.message || "Failed to create novel");
@@ -154,148 +78,141 @@ export default function CreateNovel() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-black to-purple-900 py-20 px-4">
-      <div className="relative w-full max-w-2xl rounded-3xl bg-white/10 backdrop-blur-xl shadow-2xl border border-white/20 p-8">
-
-        {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-            <BookOpen size={28} />
+    <div className="min-h-screen bg-[#0a0a0c] text-slate-200 py-20 px-4 flex justify-center">
+      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Preview Card */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-28 space-y-4">
+            <h3 className="text-lg font-medium text-slate-400 px-2">Cover Preview</h3>
+            <div className="aspect-[2/3] rounded-2xl bg-slate-900 border-2 border-dashed border-slate-800 flex flex-col items-center justify-center overflow-hidden relative group">
+              {previewUrl ? (
+                <>
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => {setCoverImage(null); setPreviewUrl(null);}}
+                    className="absolute top-2 right-2 p-2 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X size={16} />
+                  </button>
+                </>
+              ) : (
+                <div className="text-center p-6">
+                  <UploadCloud className="mx-auto mb-4 text-slate-600" size={48} />
+                  <p className="text-sm text-slate-500">No cover uploaded yet</p>
+                </div>
+              )}
+            </div>
           </div>
-          <h1 className="text-3xl font-light text-white mt-4">
-            Create <span className="font-semibold">Novel</span>
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Begin your story
-          </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={submitHandler} className="space-y-6">
+        {/* Right Column: Main Form */}
+        <form onSubmit={submitHandler} className="lg:col-span-2 space-y-8 bg-slate-900/50 p-8 rounded-3xl border border-white/5 backdrop-blur-md">
+          <header className="border-b border-white/10 pb-6">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              New Masterpiece
+            </h1>
+            <p className="text-slate-400">Fill in the details to launch your novel.</p>
+          </header>
 
-          {/* Title */}
-          <input
-            type="text"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Novel title"
-            className="w-full px-4 py-3 rounded-xl bg-black/40 text-white
-                       placeholder-gray-500 focus:outline-none focus:ring-2
-                       focus:ring-blue-500 transition"
-          />
+          <section className="space-y-4">
+            <input
+              name="title"
+              required
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter a catchy title..."
+              className="w-full text-2xl font-semibold bg-transparent border-b border-slate-700 focus:border-blue-500 outline-none pb-2 transition"
+            />
+            
+            <textarea
+              name="description"
+              required
+              rows="4"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="What's your story about?"
+              className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
+            />
+          </section>
+          
 
-          {/* Description */}
-          <textarea
-            rows="4"
-            required
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Novel description"
-            className="w-full px-4 py-3 rounded-xl bg-black/40 text-white
-                       placeholder-gray-500 focus:outline-none focus:ring-2
-                       focus:ring-purple-500 transition"
-          />
-
-          {/* Genres */}
-          <div className="space-y-3">
-            <p className="text-sm text-gray-400">Select genres</p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto">
-              {GENRES.map((g) => (
+          {/* Dynamic Selector (Genre) */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-end">
+              <label className="text-sm font-medium text-slate-400">Genres</label>
+              <div className="relative">
+                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input 
+                  placeholder="Search genres..." 
+                  className="bg-slate-800 text-xs pl-8 pr-2 py-1 rounded-md outline-none"
+                  onChange={(e) => setSearchTerm({...searchTerm, genre: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-black/20 rounded-xl">
+              {filteredGenres.map((g) => (
                 <button
                   type="button"
                   key={g}
-                  onClick={() => toggleGenre(g)}
-                  className={`px-3 py-2 rounded-lg text-sm transition
-                    ${
-                      genres.includes(g)
-                        ? "bg-indigo-600 text-white"
-                        : "bg-black/40 text-gray-300 hover:bg-black/60"
-                    }`}
+                  onClick={() => toggleItem("genres", g)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    formData.genres.includes(g) 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" 
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                  }`}
                 >
                   {g}
                 </button>
               ))}
             </div>
-
-            {genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {genres.map((g) => (
-                  <span
-                    key={g}
-                    className="px-3 py-1 text-xs rounded-full
-                               bg-indigo-500/20 text-indigo-300"
-                  >
-                    {g}
-                  </span>
-                ))}
+          </section>
+          {/* Dynamic Selector (Tags) */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-end">
+              <label className="text-sm font-medium text-slate-400">Tags</label>
+              <div className="relative">
+                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input 
+                  placeholder="Search tags..." 
+                  className="bg-slate-800 text-xs pl-8 pr-2 py-1 rounded-md outline-none"
+                  onChange={(e) => setSearchTerm({...searchTerm, tag: e.target.value})}
+                />
               </div>
-            )}
-          </div>
-          {/* Tags */}
-          <div className="space-y-3">
-            <p className="text-sm text-gray-400">Select Tags</p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto">
-              {TAGS.map((t) => (
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-black/20 rounded-xl">
+              {filteredTags.map((tag) => (
                 <button
                   type="button"
-                  key={t}
-                  onClick={() => toggleTag(t)}
-                  className={`px-3 py-2 rounded-lg text-sm transition
-                    ${
-                      tags.includes(t)
-                        ? "bg-indigo-600 text-white"
-                        : "bg-black/40 text-gray-300 hover:bg-black/60"
-                    }`}
+                  key={tag}
+                  onClick={() => toggleItem("tags", tag)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    formData.tags.includes(tag) 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" 
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                  }`}
                 >
-                  {t}
+                  {tag}
                 </button>
               ))}
             </div>
+          </section>
+          {/* File Upload Hidden Input */}
+          <section>
+            <label className="block text-sm font-medium text-slate-400 mb-2">Upload Cover</label>
+            <label className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700 cursor-pointer hover:bg-slate-800 transition">
+              <ImageIcon className="text-blue-400" />
+              <span className="text-sm text-slate-300">{coverImage ? coverImage.name : "Choose a high-quality JPG/PNG"}</span>
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+            </label>
+          </section>
 
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  <span
-                    key={t}
-                    className="px-3 py-1 text-xs rounded-full
-                               bg-indigo-500/20 text-indigo-300"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Cover Image */}
-          <div className="relative">
-            <ImageIcon
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              required
-              onChange={(e) => setCoverImage(e.target.files[0])}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-black/40
-                         text-gray-300 focus:outline-none"
-            />
-          </div>
-
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r
-                       from-blue-500 to-purple-600 text-white font-semibold
-                       hover:scale-[1.02] active:scale-[0.98]
-                       transition transform shadow-lg"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-blue-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Creating..." : "Create Novel"}
+            {loading ? "Publishing..." : "Publish Novel"}
           </button>
         </form>
       </div>

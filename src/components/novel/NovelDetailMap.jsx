@@ -2,42 +2,43 @@ import PropTypes from "prop-types";
 
 const NovelDetailMap = ({ novel }) => {
   if (!novel) return null;
-console.log(novel);
 
   return (
     <div
-      className="rounded-2xl
-        bg-white/5 backdrop-blur-xl
-        border border-white/10
-        shadow-xl overflow-hidden"
+      className="rounded-2xl overflow-hidden shadow-2xl transition-all duration-500
+        bg-[var(--bg-secondary)] border border-[var(--border)]"
     >
       <DetailRow label="Titles">
-        <ul className="list-disc pl-5 space-y-1 text-gray-200">
-          <li className="font-medium text-white">{novel.title}</li>
+        <ul className="list-disc pl-5 space-y-1 text-[var(--text-dim)]">
+          <li className="font-black text-[var(--text-main)] italic">{novel.title}</li>
           {novel.altTitles?.map((t, i) => (
-            <li key={i} className="text-gray-400">
+            <li key={i} className="text-[var(--text-dim)] opacity-70 italic font-medium">
               {t}
             </li>
           ))}
         </ul>
       </DetailRow>
 
-      <DetailRow label="Status">{novel.status || "Ongoing"}</DetailRow>
-      {/* use time stamp for date added */}
+      <DetailRow label="Status">
+        <span className="text-[var(--accent)] font-black uppercase tracking-widest text-xs">
+          {novel.status || "Ongoing"}
+        </span>
+      </DetailRow>
+
       <DetailRow label="Date Added">
         {novel.createdAt
           ? new Date(novel.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
+              year: "numeric", month: "long", day: "numeric",
             })
           : "—"}
       </DetailRow>
 
       <DetailRow label="Author">
-        <div>
-          <div className="text-white">{novel.authorNative}</div>
-          <div className="text-indigo-400">{novel.author}</div>
+        <div className="space-y-1">
+          <div className="text-[var(--text-main)] font-bold">{novel.authorNative}</div>
+          <div className="text-[var(--accent)] font-mono text-xs uppercase tracking-tighter">
+            {novel.author}
+          </div>
         </div>
       </DetailRow>
 
@@ -46,9 +47,8 @@ console.log(novel);
           {novel.genres?.map((g, i) => (
             <span
               key={i}
-              className="px-3 py-1 text-xs rounded-full
-                bg-indigo-500/10 text-indigo-300
-                border border-indigo-400/20"
+              className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg
+                bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20"
             >
               {g}
             </span>
@@ -61,9 +61,8 @@ console.log(novel);
           {novel.tags?.map((tag, i) => (
             <span
               key={i}
-              className="px-3 py-1 text-xs rounded-full
-                bg-white/10 text-gray-300
-                border border-white/20"
+              className="px-3 py-1 text-[10px] font-bold uppercase tracking-tighter rounded-lg
+                bg-[var(--bg-primary)] text-[var(--text-dim)] border border-[var(--border)]"
             >
               {tag}
             </span>
@@ -74,17 +73,18 @@ console.log(novel);
   );
 };
 
-/* consistent row */
+/* Consistent Row using System Variables */
 const DetailRow = ({ label, children }) => (
-  <div className="flex border-b border-white/10 last:border-b-0">
+  <div className="flex border-b border-[var(--border)] last:border-b-0 group">
     <div
-      className="w-36 md:w-44 px-4 py-3
-        bg-white/5 text-gray-400
-        font-medium text-sm"
+      className="w-36 md:w-44 px-5 py-4 font-mono uppercase tracking-[0.2em]
+        bg-[var(--bg-primary)] text-[var(--text-dim)] opacity-80 text-[10px] font-black"
     >
       {label}
     </div>
-    <div className="flex-1 px-4 py-3 text-gray-200">{children}</div>
+    <div className="flex-1 px-5 py-4 text-[var(--text-main)] text-sm font-medium">
+      {children}
+    </div>
   </div>
 );
 
