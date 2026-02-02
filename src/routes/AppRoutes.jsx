@@ -14,6 +14,7 @@ import Chapter from "../pages/novel/Reader";
 import NovelUploads from "../pages/novel/NovelUploads";
 import Library from "../pages/lib/Library";
 import Settings from "../pages/Settings";
+import Notification from "../pages/NotificationPage";
 const AppRoutes = ({ currentTheme, setTheme }) => {
   return (
     <Routes>
@@ -32,6 +33,7 @@ const AppRoutes = ({ currentTheme, setTheme }) => {
         <Route path="/novel/:novelId/chapter/:chapterNumber" element={<Chapter />} />
         <Route path="/library" element={<Library />} />
         <Route path="/settings" element={<Settings currentTheme={currentTheme} setTheme={setTheme} />} />
+        <Route path="/notifications" element={<Notification />} />
       </Route>
 
       {/* Routes WITHOUT Navbar */}

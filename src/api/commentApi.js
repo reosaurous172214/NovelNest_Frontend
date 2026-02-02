@@ -19,11 +19,20 @@ export const commentApi = {
         const response = await axios.post(API_URL, { novelId, content }, getAuthHeaders());
         return response.data;
     },
+    // Edit comment
+    edit : async(commentId,novelId,content) =>{
+        const res = await axios.put(`${API_URL}/${commentId}`,{novelId,content}, getAuthHeaders());
+        return res.data;
+    },
 
     // Delete a comment
     remove: async (commentId) => {
         const response = await axios.delete(`${API_URL}/${commentId}`, getAuthHeaders());
         return response.data;
+    },
+    update: async (commentId) =>{
+        const res = await axios.put(`${API_URL}/${commentId}`, getAuthHeaders());
+        return res.data;
     },
     vote: async (commentId, voteType) => {
         const response = await axios.patch(`${API_URL}/${commentId}/vote`, { voteType }, getAuthHeaders());

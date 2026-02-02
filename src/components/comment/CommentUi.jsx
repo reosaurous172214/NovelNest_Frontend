@@ -1,18 +1,46 @@
 import React, { useState, useEffect, useMemo } from "react";
 import ReactMarkdown from 'react-markdown';
 import { 
-  FaHeart, FaBold, FaItalic, FaSmile, FaPaperPlane, FaCommentAlt 
+  FaHeart, FaBold, FaItalic, FaSmile, FaTrash, FaReply, FaEdit, 
+  FaChevronDown, FaChevronUp, FaExclamationCircle, FaTimes 
 } from "react-icons/fa";
 import { commentApi } from "../../api/commentApi";
 
 const MAX_CHARS = 1000;
 
+const DeleteModal = ({ isOpen, onClose, onConfirm, loading }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-4">
+            <FaExclamationCircle size={24} />
+          </div>
+          <h4 className="text-lg font-bold text-[var(--text-main)] mb-2">Delete Comment?</h4>
+          <p className="text-sm text-[var(--text-dim)] mb-8">Permanent actions cannot be undone.</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-[var(--text-dim)] hover:bg-[var(--bg-primary)] rounded-xl">Cancel</button>
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold disabled:opacity-50">
+            {loading ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CommentSection = ({ novelId, currentUser }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [isFocused, setIsFocused] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
 
   useEffect(() => { loadComments(); }, [novelId]);
 
@@ -43,13 +71,28 @@ const CommentSection = ({ novelId, currentUser }) => {
     finally { setLoading(false); }
   };
 
+  const triggerDelete = (commentId) => {
+    setCommentToDelete(commentId);
+    setShowModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!commentToDelete) return;
+    setDeleteLoading(true);
+    try {
+      await commentApi.remove(commentToDelete);
+      setComments(prev => prev.filter(c => c._id !== commentToDelete));
+      setShowModal(false);
+    } catch (err) { console.error("Delete failed", err); } 
+    finally { setDeleteLoading(false); }
+  };
+
   const handleInsertText = (before, after, inputId, currentVal, setter) => {
     const textarea = document.getElementById(inputId);
     if (!textarea) return;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const result = currentVal.substring(0, start) + before + currentVal.substring(start, end) + after + currentVal.substring(end);
-    
     setter(result);
     setTimeout(() => {
       textarea.focus();
@@ -58,153 +101,167 @@ const CommentSection = ({ novelId, currentUser }) => {
   };
 
   return (
-    // Changed: Removed any max-width constraints to ensure full width
-    <div className="w-full mt-12 space-y-8 pb-20 text-left px-0 animate-in fade-in duration-700">
-      
-      {/* HEADER SECTION - Simple & Wide */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-4 px-2">
-        <h3 className="text-sm font-bold text-[var(--text-main)]">Comments</h3>
-        <div className="flex gap-6 items-center">
+    <div className="w-full mt-12 space-y-8 pb-20 text-left px-2 sm:px-0">
+      <DeleteModal isOpen={showModal} onClose={() => setShowModal(false)} onConfirm={handleConfirmDelete} loading={deleteLoading} />
+
+      {/* HEADER */}
+      <div className="flex flex-wrap items-center justify-between border-b border-[var(--border)] pb-4 gap-4">
+        <h3 className="text-lg font-bold text-[var(--text-main)]">Discussion ({comments.length})</h3>
+        <div className="flex gap-2 sm:gap-4 items-center">
             {['newest', 'popular'].map(type => (
-                <button 
-                    key={type}
-                    onClick={() => setSortBy(type)}
-                    className={`text-[11px] font-bold tracking-tight transition-all capitalize ${sortBy === type ? "text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text-main)]"}`}
-                >
+                <button key={type} onClick={() => setSortBy(type)} className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all ${sortBy === type ? "text-[var(--accent)] border-b-2 border-[var(--accent)]" : "text-[var(--text-dim)]"}`}>
                     {type}
                 </button>
             ))}
         </div>
       </div>
 
-      {/* FULL-WIDTH COMMENT FORM */}
-      <div className={`transition-all duration-300 border-y sm:border sm:rounded-2xl ${isFocused ? 'border-[var(--accent)] shadow-sm' : 'border-[var(--border)]'} bg-[var(--bg-secondary)] p-4 sm:p-5 w-full`}>
-        <div className="flex flex-col sm:flex-row gap-4 items-start w-full">
-          {/* Avatar row for mobile, side-by-side for desktop */}
-          <div className="flex items-center gap-3 sm:block">
-            <div className="w-8 h-8 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center font-bold text-[var(--accent)] text-xs shadow-inner">
-              {currentUser?.username?.charAt(0) || "U"}
-            </div>
-            <span className="sm:hidden text-xs font-bold text-[var(--text-main)]">{currentUser?.username}</span>
-          </div>
-          
-          <form onSubmit={handlePostComment} className="w-full flex-1">
-            <textarea
-              id="main-editor"
-              value={newComment}
-              onFocus={() => setIsFocused(true)}
-              onChange={(e) => setNewComment(e.target.value.slice(0, MAX_CHARS))}
-              placeholder="Add a comment..."
-              className="w-full bg-transparent py-1 text-sm text-[var(--text-main)] focus:outline-none resize-none min-h-[44px] placeholder:text-[var(--text-dim)]/50 leading-relaxed"
-              style={{ height: isFocused || newComment ? '140px' : '44px' }}
-            />
-            
-            {(isFocused || newComment) && (
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--border)] animate-in slide-in-from-top-1">
-                <div className="flex gap-5 text-[var(--text-dim)]">
-                  <button type="button" onClick={() => handleInsertText("**", "**", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)] transition-transform active:scale-125"><FaBold size={14}/></button>
-                  <button type="button" onClick={() => handleInsertText("_", "_", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)] transition-transform active:scale-125"><FaItalic size={14}/></button>
-                  <button type="button" onClick={() => handleInsertText("😊", "", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)] transition-transform active:scale-125"><FaSmile size={14}/></button>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <span className={`text-[10px] font-bold tracking-tighter ${newComment.length >= MAX_CHARS ? 'text-red-500' : 'text-[var(--text-dim)]'}`}>
-                    {newComment.length}/{MAX_CHARS}
-                  </span>
-                  <button 
-                    disabled={loading || !newComment.trim()} 
-                    className="text-xs font-bold text-[var(--accent)] px-2 hover:opacity-70 disabled:opacity-30 transition-all uppercase tracking-widest"
-                  >
-                    {loading ? "..." : "Post"}
-                  </button>
-                </div>
+      {/* INPUT FORM - Responsive Adjustments */}
+      <div className={`transition-all border rounded-2xl ${isFocused ? 'border-[var(--accent)] bg-[var(--bg-secondary)] shadow-lg' : 'border-[var(--border)] bg-[var(--bg-secondary)]/50'} p-3 sm:p-5 w-full`}>
+        <form onSubmit={handlePostComment} className="w-full">
+          <textarea
+            id="main-editor"
+            value={newComment}
+            onFocus={() => setIsFocused(true)}
+            onChange={(e) => setNewComment(e.target.value.slice(0, MAX_CHARS))}
+            placeholder="Write your thoughts..."
+            className="w-full bg-transparent text-sm text-[var(--text-main)] focus:outline-none resize-none min-h-[44px]"
+            style={{ height: isFocused || newComment ? '120px' : '44px' }}
+          />
+          {(isFocused || newComment) && (
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-4 pt-4 border-t border-[var(--border)] gap-4">
+              <div className="flex gap-6 text-[var(--text-dim)]">
+                <button type="button" onClick={() => handleInsertText("**", "**", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)]"><FaBold size={14}/></button>
+                <button type="button" onClick={() => handleInsertText("_", "_", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)]"><FaItalic size={14}/></button>
+                <button type="button" onClick={() => handleInsertText("😊", "", "main-editor", newComment, setNewComment)} className="hover:text-[var(--accent)]"><FaSmile size={14}/></button>
               </div>
-            )}
-          </form>
-        </div>
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="text-[10px] font-mono text-[var(--text-dim)]">{newComment.length}/{MAX_CHARS}</span>
+                <button disabled={loading || !newComment.trim()} className="bg-[var(--accent)] text-white text-xs font-bold px-6 py-2 rounded-full hover:opacity-90 disabled:opacity-30">
+                  {loading ? "..." : "Post"}
+                </button>
+              </div>
+            </div>
+          )}
+        </form>
       </div>
 
-      {/* FULL-WIDTH COMMENTS LIST */}
-      <div className="space-y-10 mt-10 w-full max-h-[800px] overflow-y-auto pr-2 no-scrollbar">
+      {/* LIST */}
+      <div className="space-y-6">
         {sortedComments.map(c => (
-          <CommentCard 
-            key={c._id} 
-            comment={c} 
-            currentUser={currentUser} 
-            novelId={novelId}
-            onRefresh={loadComments}
-            handleInsertText={handleInsertText}
-          />
+          <CommentCard key={c._id} comment={c} currentUser={currentUser} novelId={novelId} onRefresh={loadComments} onDelete={triggerDelete} handleInsertText={handleInsertText} />
         ))}
       </div>
     </div>
   );
 };
 
-const CommentCard = ({ comment, currentUser, novelId, onRefresh, handleInsertText, isReply = false }) => {
+const CommentCard = ({ comment, currentUser, novelId, onRefresh, onDelete, handleInsertText, isReply = false, rootId = null }) => {
   const [showReplyInput, setShowReplyInput] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
   const [replyText, setReplyText] = useState("");
   const [showNested, setShowNested] = useState(false);
+  
+  const isOwner = currentUser?._id === comment.userId?._id;
+  const currentRootId = rootId || comment._id;
+  const editorId = `edit-${comment._id}`;
 
   const handleReply = async () => {
-    if (!replyText.trim() || replyText.length > MAX_CHARS) return;
+    if (!replyText.trim()) return;
     try {
-      await commentApi.postReply(comment._id, replyText, novelId);
+      // FIX: Always reply to the rootId to keep flat threading, but add @mention
+      const contentWithMention = isReply ? `@${comment.userId?.username} ${replyText}` : replyText;
+      await commentApi.postReply(currentRootId, contentWithMention, novelId);
       setReplyText("");
       setShowReplyInput(false);
       onRefresh();
-    } catch (err) { console.error("Reply failed:", err); }
+    } catch (err) { console.error(err); }
   };
 
-  const uniqueReplyId = `reply-editor-${comment._id}`;
+  const handleUpdate = async () => {
+    try {
+      await commentApi.edit(comment._id, novelId, editText);
+      setIsEditing(false);
+      onRefresh();
+    } catch (err) { console.error(err); }
+  };
 
   return (
-    <div className={`w-full animate-in fade-in slide-in-from-bottom-1 ${isReply ? 'pl-6 sm:pl-12 border-l border-[var(--border)] ml-4 sm:ml-6' : 'px-2'}`}>
-      <div className="flex gap-3 items-start w-full">
-        <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden flex-shrink-0">
+    <div className={`group w-full ${isReply ? 'pl-4 sm:pl-8 border-l-2 border-[var(--border)] mt-4' : 'border-b border-[var(--border)]/30 pb-6'}`}>
+      <div className="flex gap-3 sm:gap-4 items-start">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden flex-shrink-0">
           {comment.userId?.profilePicture ? 
             <img src={`${process.env.REACT_APP_API_URL}${comment.userId.profilePicture}`} className="w-full h-full object-cover" alt="" /> :
-            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold">{comment.userId?.username?.charAt(0)}</div>
+            <div className="w-full h-full flex items-center justify-center text-xs font-bold bg-[var(--accent)] text-white">{comment.userId?.username?.charAt(0)}</div>
           }
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-[var(--text-main)] truncate">{comment.userId?.username}</span>
-            <span className="text-[10px] text-[var(--text-dim)] whitespace-nowrap opacity-60 font-medium">{new Date(comment.createdAt).toLocaleDateString()}</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">{comment.userId?.username}</span>
+              <span className="text-[9px] sm:text-[10px] text-[var(--text-dim)] opacity-70 italic">{new Date(comment.createdAt).toLocaleDateString()}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 sm:gap-3">
+               {isOwner && !isEditing && (
+                 <>
+                   <button onClick={() => setIsEditing(true)} className="text-[var(--text-dim)] hover:text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-all"><FaEdit size={12}/></button>
+                   <button onClick={() => onDelete(comment._id)} className="text-[var(--text-dim)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><FaTrash size={12}/></button>
+                 </>
+               )}
+            </div>
           </div>
           
-          <div className="text-[14px] text-[var(--text-main)] leading-relaxed prose prose-invert max-w-none">
-            <ReactMarkdown>{comment.content}</ReactMarkdown>
-          </div>
+          {isEditing ? (
+            <div className="mt-2 space-y-2">
+               <textarea 
+                id={editorId}
+                value={editText} 
+                onChange={(e) => setEditText(e.target.value)}
+                className="w-full bg-[var(--bg-primary)] border border-[var(--accent)] rounded-lg p-3 text-sm text-[var(--text-main)] outline-none min-h-[100px]"
+               />
+               <div className="flex justify-between items-center">
+                  <div className="flex gap-3 text-[var(--text-dim)]">
+                    <button onClick={() => handleInsertText("**", "**", editorId, editText, setEditText)}><FaBold size={12}/></button>
+                    <button onClick={() => handleInsertText("_", "_", editorId, editText, setEditText)}><FaItalic size={12}/></button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setIsEditing(false)} className="text-[10px] font-bold text-[var(--text-dim)] px-3 py-1 uppercase">Cancel</button>
+                    <button onClick={handleUpdate} className="bg-[var(--accent)] text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase">Save</button>
+                  </div>
+               </div>
+            </div>
+          ) : (
+            <div className="text-[13px] sm:text-[14px] text-[var(--text-main)] leading-relaxed prose prose-invert max-w-none mb-3 overflow-hidden">
+              <ReactMarkdown>{comment.content}</ReactMarkdown>
+            </div>
+          )}
           
-          <div className="flex items-center gap-6 mt-3">
-            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-[11px] font-bold text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">Reply</button>
-            <button 
-              onClick={() => commentApi.vote(comment._id, 'like').then(onRefresh)} 
-              className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-red-500 transition-all group"
-            >
-              <FaHeart size={11} className={comment.likes > 0 ? "text-red-500" : "group-hover:text-red-500"} />
+          <div className="flex items-center gap-4 sm:gap-6 mt-3">
+            <button onClick={() => commentApi.vote(comment._id, 'like').then(onRefresh)} className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-red-500">
+              <FaHeart size={11} className={comment.likes > 0 ? "text-red-500" : ""} />
               <span className="text-[11px] font-bold">{comment.likes || 0}</span>
+            </button>
+            <button onClick={() => setShowReplyInput(!showReplyInput)} className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--text-dim)] hover:text-[var(--accent)]">
+              <FaReply size={11}/> Reply
             </button>
           </div>
 
           {showReplyInput && (
-            <div className="mt-4 p-4 rounded-xl bg-[var(--bg-primary)]/40 border border-[var(--border)] w-full">
+            <div className="mt-4 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] w-full animate-in slide-in-from-top-1">
               <input 
-                id={uniqueReplyId}
+                id={`reply-${comment._id}`}
                 autoFocus
                 value={replyText}
-                onChange={(e) => setReplyText(e.target.value.slice(0, MAX_CHARS))}
+                onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.userId?.username}...`}
-                className="w-full bg-transparent border-b border-[var(--accent)]/30 py-1 text-sm text-[var(--text-main)] outline-none mb-3"
+                className="w-full bg-transparent border-b border-[var(--accent)]/30 py-2 text-sm text-[var(--text-main)] outline-none mb-3"
               />
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4">
-                   <button type="button" onClick={() => handleInsertText("**", "**", uniqueReplyId, replyText, setReplyText)} className="text-[var(--text-dim)] hover:text-[var(--accent)]"><FaBold size={12}/></button>
-                   <button type="button" onClick={() => handleInsertText("_", "_", uniqueReplyId, replyText, setReplyText)} className="text-[var(--text-dim)] hover:text-[var(--accent)]"><FaItalic size={12}/></button>
-                </div>
-                <button onClick={handleReply} className="text-[11px] font-bold text-[var(--accent)] uppercase">Post</button>
+              <div className="flex justify-end gap-3 items-center">
+                <button onClick={() => setShowReplyInput(false)} className="text-[10px] font-bold text-[var(--text-dim)] uppercase">Cancel</button>
+                <button onClick={handleReply} className="text-[10px] font-bold text-[var(--accent)] uppercase">Post</button>
               </div>
             </div>
           )}
@@ -212,30 +269,28 @@ const CommentCard = ({ comment, currentUser, novelId, onRefresh, handleInsertTex
           {comment.replies?.length > 0 && !isReply && (
             <button 
               onClick={() => setShowNested(!showNested)}
-              className="flex items-center gap-3 mt-4 text-[11px] font-bold text-[var(--text-dim)] hover:text-[var(--text-main)]"
+              className="mt-4 text-[11px] font-bold text-[var(--accent)] flex items-center gap-2"
             >
-              <div className="w-8 h-[1px] bg-[var(--border)]" />
-              {showNested ? "Hide replies" : `View ${comment.replies.length} replies`}
+              {showNested ? <FaChevronUp size={10}/> : <FaChevronDown size={10}/>}
+              {showNested ? "Hide" : `Show ${comment.replies.length} replies`}
             </button>
           )}
-        </div>
-      </div>
 
-      {showNested && comment.replies?.length > 0 && (
-        <div className="mt-6 space-y-8 w-full">
-          {comment.replies.map(r => (
+          {showNested && comment.replies?.map(r => (
             <CommentCard 
               key={r._id} 
               comment={r} 
               isReply={true} 
+              rootId={currentRootId} // Pass down the rootId to flat-thread deep replies
               novelId={novelId} 
               currentUser={currentUser} 
-              onRefresh={onRefresh}
+              onRefresh={onRefresh} 
+              onDelete={onDelete} 
               handleInsertText={handleInsertText}
             />
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };

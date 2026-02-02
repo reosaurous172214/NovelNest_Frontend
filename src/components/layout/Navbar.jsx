@@ -5,12 +5,13 @@ import {
   FaHome, FaBook, FaSignOutAlt, FaTachometerAlt, FaBars, FaTimes, 
   FaSearch, FaChevronDown, FaUserCircle, FaBookmark, FaUser, FaShieldAlt, FaCog, FaArrowRight
 } from "react-icons/fa";
-import { IoLibrary, IoNotificationsSharp } from "react-icons/io5";
+import { IoLibrary } from "react-icons/io5";
 import Logo from "./Logo";
 import { useAuth } from "../../context/AuthContext";
 import { useAlert } from "../../context/AlertContext";
+import NotificationBar from "../notification/Notification";
 
-const Navbar = ({ show, currentTheme, setTheme }) => {
+const Navbar = ({ show, scrolled: propScrolled }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -27,8 +28,7 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
   const location = useLocation();
   const profileRef = useRef(null);
   const searchRef = useRef(null);
-
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -38,18 +38,24 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
     window.addEventListener("scroll", handleScroll);
 
     const handleClickOutside = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
-      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
+      // Close profile if clicking outside
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+      // Close search if clicking outside the search container
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
     };
-    document.addEventListener("mousedown", handleClickOutside);
 
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  /* --- UNIVERSAL SEARCH LOGIC --- */
+  /* --- SEARCH LOGIC --- */
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim().length >= 2) {
@@ -70,6 +76,21 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
     }, 300);
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
+
+  // FIXED: Using onMouseDown handler to beat the 'blur' event race
+  const handleResultNavigation = (e, novelId) => {
+    e.preventDefault(); // Prevents input from blurring immediately
+    e.stopPropagation(); 
+    
+    navigate(`/novel/${novelId}`);
+    
+    // Close UI elements after a tiny delay
+    setTimeout(() => {
+      setSearchOpen(false);
+      setSearchQuery("");
+      setMenuOpen(false);
+    }, 50);
+  };
 
   const handleLogout = () => {
     showAlert("Logged out successfully", "info");
@@ -94,10 +115,9 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
   return (
     <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${show ? "translate-y-0" : "-translate-y-full"} ${scrolled ? "pt-2" : "pt-4"}`}>
       
-      {/* Container with responsive max-width */}
       <div className={`mx-auto px-4 w-full transition-all duration-500 ${scrolled ? "max-w-[95%]" : "max-w-[98%]"}`}>
         
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl rounded-[2rem] px-4 md:px-8 py-2.5 flex items-center justify-between gap-2 md:gap-6 backdrop-blur-3xl">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] shadow-lg rounded-[2rem] px-4 md:px-8 py-2.5 flex items-center justify-between gap-2 md:gap-6 backdrop-blur-3xl">
           
           <Link to="/" className="shrink-0 scale-90 md:scale-100">
             <Logo />
@@ -117,19 +137,28 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
               <FaSearch className={`absolute left-4 top-3.5 transition-colors ${isSearching ? "text-[var(--accent)] animate-pulse" : "text-[var(--text-dim)]"}`} />
             </form>
 
-            {/* DESKTOP DROPDOWN */}
             {searchOpen && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[1.5rem] shadow-2xl overflow-hidden z-[110] backdrop-blur-3xl">
                 <div className="p-2 max-h-80 overflow-y-auto no-scrollbar">
                   {searchResults.length > 0 ? (
-                    searchResults.map((novel) => (
-                      <Link key={novel.id} to={`/novel/${novel.id}`} onClick={() => setSearchOpen(false)} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--accent)]/10 transition-all group">
-                        <img src={novel.cover?.startsWith('http') ? novel.cover : `${process.env.REACT_APP_API_URL}${novel.cover}`} className="w-8 h-12 object-cover rounded-lg border border-[var(--border)]" alt="" />
+                    searchResults.map((novel, index) => (
+                      <div 
+                        key={`dt-res-${novel.id || novel._id}-${index}`} 
+                        onMouseDown={(e) => handleResultNavigation(e, novel.id || novel._id)} 
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--accent)]/10 transition-all group cursor-pointer"
+                      >
+                        <img 
+                          src={novel.cover?.startsWith('http') ? novel.cover : `${process.env.REACT_APP_API_URL}${novel.cover}`} 
+                          className="w-8 h-12 object-cover rounded-lg border border-[var(--border)]" 
+                          alt="" 
+                        />
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="text-[11px] font-black text-[var(--text-main)] truncate uppercase group-hover:text-[var(--accent)]">{novel.title}</p>
+                          <p className="text-[11px] font-black text-[var(--text-main)] truncate uppercase group-hover:text-[var(--accent)]">
+                            {novel.title}
+                          </p>
                         </div>
                         <FaArrowRight size={10} className="text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-all" />
-                      </Link>
+                      </div>
                     ))
                   ) : (
                     <div className="p-4 text-center text-[10px] text-[var(--text-dim)] font-bold uppercase">No results found</div>
@@ -140,7 +169,6 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {/* DESKTOP LINKS */}
             <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
               <NavItem to="/" icon={<FaHome />} label="Home" active={location.pathname === "/"} />
               <NavItem to="/novels" icon={<FaBook />} label="Explore" active={location.pathname === "/novels"} />
@@ -156,9 +184,7 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
               </div>
             ) : (
               <div className="flex items-center gap-2 md:gap-3">
-                <button className="hidden sm:flex p-2 text-[var(--text-dim)] hover:text-[var(--accent)] bg-[var(--bg-primary)] rounded-xl transition-all border border-[var(--border)]">
-                  <IoNotificationsSharp size={18} />
-                </button>
+                <NotificationBar currentUser={user} />
 
                 <div className="relative" ref={profileRef}>
                   <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1 md:pr-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl transition-all">
@@ -174,10 +200,11 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
                   {profileOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden z-[110]">
                       <div className="p-2">
+                        <DropdownItem to="/dashboard" icon={<FaTachometerAlt />} label="Dashboard" />
                         <DropdownItem to="/profile" icon={<FaUserCircle />} label="My Profile" />
                         <DropdownItem to="/library" icon={<FaBookmark />} label="My Library" />
                         <DropdownItem to="/settings" icon={<FaCog />} label="Settings" />
-                        {user?.role === 'admin' && <DropdownItem to="/dashboard" icon={<FaShieldAlt />} label="Admin Panel" />}
+                        {user?.role === 'admin' && <DropdownItem to="/admin" icon={<FaShieldAlt />} label="Admin Panel" />}
                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] font-black uppercase mt-1 border-t border-[var(--border)]">
                           <FaSignOutAlt /> Sign Out
                         </button>
@@ -188,7 +215,6 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
               </div>
             )}
 
-            {/* MOBILE MENU TOGGLE */}
             <button className="md:hidden p-2.5 rounded-xl bg-[var(--bg-primary)] text-[var(--text-main)] border border-[var(--border)] active:scale-90" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
             </button>
@@ -196,11 +222,10 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
         </div>
       </div>
 
-      {/* MOBILE MENU (FULLY RESPONSIVE) */}
+      {/* MOBILE MENU */}
       <div className={`fixed inset-x-4 top-20 p-5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] md:hidden shadow-2xl transition-all duration-300 origin-top z-[120] max-h-[85vh] overflow-y-auto ${menuOpen ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 -translate-y-4 pointer-events-none"}`}>
         
-        {/* MOBILE SEARCH */}
-        <div className="relative mb-6" ref={searchRef}>
+        <div className="relative mb-6">
           <form onSubmit={onSearchSubmit}>
             <input
               type="text"
@@ -213,28 +238,31 @@ const Navbar = ({ show, currentTheme, setTheme }) => {
             <FaSearch className={`absolute left-5 top-4 ${isSearching ? "text-[var(--accent)] animate-pulse" : "text-[var(--text-dim)]"}`} />
           </form>
 
-          {/* MOBILE SEARCH RESULTS */}
           {searchOpen && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl shadow-xl overflow-hidden z-[130]">
                 <div className="p-2 max-h-60 overflow-y-auto no-scrollbar">
-                  {searchResults.map((novel) => (
-                    <Link key={novel.id} to={`/novel/${novel.id}`} onClick={() => {setSearchOpen(false); setMenuOpen(false);}} className="flex items-center gap-3 p-3 hover:bg-[var(--accent)]/10 rounded-xl">
+                  {searchResults.map((novel, index) => (
+                    <div 
+                      key={`mb-res-${novel.id || novel._id}-${index}`} 
+                      onMouseDown={(e) => handleResultNavigation(e, novel.id || novel._id)} 
+                      className="flex items-center gap-3 p-3 hover:bg-[var(--accent)]/10 rounded-xl cursor-pointer"
+                    >
                       <img src={novel.cover?.startsWith('http') ? novel.cover : `${process.env.REACT_APP_API_URL}${novel.cover}`} className="w-8 h-10 object-cover rounded" alt="" />
                       <span className="text-xs font-bold text-[var(--text-main)] truncate">{novel.title}</span>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
           )}
         </div>
 
-        {/* MOBILE LINKS */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <MobileNavItem to="/" icon={<FaHome />} label="Home" onClick={() => setMenuOpen(false)} />
           <MobileNavItem to="/novels" icon={<FaBook />} label="Explore" onClick={() => setMenuOpen(false)} />
           <MobileNavItem to="/library" icon={<IoLibrary />} label="Library" onClick={() => setMenuOpen(false)} />
           {isAuthenticated && (
             <>
+              <MobileNavItem to="/dashboard" icon={<FaTachometerAlt />} label="Dashboard" onClick={() => setMenuOpen(false)} />
               <MobileNavItem to="/profile" icon={<FaUser />} label="Profile" onClick={() => setMenuOpen(false)} />
               <MobileNavItem to="/settings" icon={<FaCog />} label="Settings" onClick={() => setMenuOpen(false)} />
             </>
