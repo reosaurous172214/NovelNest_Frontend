@@ -13,6 +13,10 @@ export const commentApi = {
         const response = await axios.get(`${API_URL}/${novelId}`);
         return response.data;
     },
+    getByUser: async (userId) => {
+        const response = await axios.get(`${API_URL}/${userId}`);
+        return response.data;
+    },
 
     // Post a new comment
     post: async (novelId, content) => {

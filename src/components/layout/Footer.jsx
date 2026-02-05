@@ -70,7 +70,7 @@ const Footer = () => {
         {/* --- 3. COPYRIGHT & CREDITS --- */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-[12px] text-[var(--text-dim)] font-medium tracking-wide">
-            © {new Date().getFullYear()} <span className="text-[var(--text-main)] font-bold">NovelHub</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="text-[var(--text-main)] font-bold">NovelNest</span>. All rights reserved.
           </div>
 
           <div className="flex items-center gap-4">

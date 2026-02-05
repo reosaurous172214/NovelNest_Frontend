@@ -1,8 +1,10 @@
-/* index.css */
+/* app.css */
+
+/* --- GLOBAL CONFIGURATION --- */
 :root {
   --theme-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* AMOLED BLACK (Default) */
+  
+  /* DEFAULT THEME (AMOLED BLACK) */
   --bg-primary: #020202;
   --bg-secondary: #0a0a0a;
   --text-main: #f8fafc;
@@ -12,26 +14,46 @@
   --border: rgba(255, 255, 255, 0.08);
 }
 
-/* NEW: PURE LIGHT THEME */
+/* --- READER THEMES --- */
+
 .theme-light {
-  --bg-primary: #f8fafc;      /* Soft White */
-  --bg-secondary: #ffffff;    /* Pure White Cards */
-  --text-main: #0f172a;       /* Deep Slate Text */
-  --text-dim: #64748b;        /* Slate Gray */
-  --accent: #2563eb;          /* Royal Blue */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --accent: #2563eb;
   --accent-glow: rgba(37, 99, 235, 0.2);
   --border: rgba(15, 23, 42, 0.1);
 }
 
-/* NEW: VINTAGE PAPER (CREAM) */
 .theme-cream {
-  --bg-primary: #fdf6e3;      /* Solarized Base */
-  --bg-secondary: #eee8d5;    /* Solarized Highlight */
-  --text-main: #073642;       /* Dark Teal Text */
-  --text-dim: #586e75;        /* Sage Gray */
-  --accent: #b58900;          /* Aged Gold */
+  --bg-primary: #fdf6e3;
+  --bg-secondary: #eee8d5;
+  --text-main: #073642;
+  --text-dim: #586e75;
+  --accent: #b58900;
   --accent-glow: rgba(181, 137, 0, 0.2);
   --border: rgba(7, 54, 66, 0.1);
+}
+
+.theme-paperback {
+  --bg-primary: #fffcf5;
+  --bg-secondary: #f7f3e9;
+  --text-main: #1a1a1a;
+  --text-dim: #71717a;
+  --accent: #4f46e5;
+  --accent-glow: rgba(79, 70, 229, 0.1);
+  --border: rgba(0, 0, 0, 0.05);
+}
+
+.theme-nordic {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #e2e8f0;
+  --text-main: #1e293b;
+  --text-dim: #64748b;
+  --accent: #0ea5e9;
+  --accent-glow: rgba(14, 165, 233, 0.1);
+  --border: rgba(14, 165, 233, 0.1);
 }
 
 .theme-cyberpunk {
@@ -54,29 +76,88 @@
   --border: rgba(16, 185, 129, 0.2);
 }
 
-/* Apply the global transition to everything */
-* {
-  transition: var(--theme-transition);
+/* --- HIGH-TECH ADMIN THEMES --- */
+
+/* Neon Velocity (Dark Tech) */
+.theme-admin-tech-dark {
+  --bg-primary: #050505;
+  --bg-secondary: #0f172a;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --accent: #22d3ee;
+  --accent-glow: rgba(34, 211, 238, 0.3);
+  --border: rgba(34, 211, 238, 0.2);
 }
 
-/* Fix for selection color - now works in light & dark */
-::selection {
-  background-color: var(--accent);
-  color: white;
+/* Medical Lab (Light Tech 1) */
+.theme-admin-tech-light-1 {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --accent: #f97316;
+  --accent-glow: rgba(249, 115, 22, 0.15);
+  --border: rgba(15, 23, 42, 0.08);
+}
+
+/* Synthetix (Light Tech 2) */
+.theme-admin-tech-light-2 {
+  --bg-primary: #f0fdf4;
+  --bg-secondary: #ffffff;
+  --text-main: #064e3b;
+  --text-dim: #059669;
+  --accent: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.15);
+  --border: rgba(16, 185, 129, 0.1);
+}
+
+/* --- BASE STYLES --- */
+
+* {
+  transition: var(--theme-transition);
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-main);
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-/* Custom SimpleMDE Styles */
+
+::selection {
+  background-color: var(--accent);
+  color: white;
+}
+
+/* --- COMPONENT STYLES --- */
+
+/* Scrollbar Styling for a "Tech" feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* SimpleMDE / Editor Styles */
 .mde-container .CodeMirror {
   background: transparent !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border) !important;
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
-  font-family: 'Georgia', serif; /* Professional serif font for authors */
+  font-family: 'Georgia', serif;
   font-size: 1.1rem;
   line-height: 1.6;
 }

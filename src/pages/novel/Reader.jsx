@@ -1,20 +1,30 @@
 import { useParams, useNavigate } from "react-router-dom";
-import ReaderLayout from "../../components/reader/ReaderLayout";
 import { useEffect, useState, useRef } from "react";
+import axios from "axios";
+
+// Components & Config
+import ReaderLayout from "../../components/reader/ReaderLayout";
 import { fetchChapter } from "../../api/fetchChapter";
 import { themeMap, fontMap } from "../../config/readerConfig";
-import { FaChevronRight, FaChevronLeft, FaCheckCircle, FaArrowUp } from "react-icons/fa";
+
+// Icons
+import { 
+  FaChevronRight, 
+  FaChevronLeft, 
+  FaArrowUp, 
+  FaSync 
+} from "react-icons/fa";
 
 export default function Reader() {
   const { novelId, chapterNumber } = useParams();
   const navigate = useNavigate();
   
-  // States
-  const [chapters, setChapters] = useState([]); // Array to support Infinite Scroll
+  // --- STATES ---
+  const [chapters, setChapters] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [isFetchingNext, setIsFetchingNext] = useState(false);
   const [hasNext, setHasNext] = useState(false);
-  const [readingMode, setReadingMode] = useState("single"); // "single" or "infinite"
+  const [readingMode, setReadingMode] = useState("single"); 
   const [nextChapterNum, setNextChapterNum] = useState(null);
 
   const [settings, setSettings] = useState({
@@ -23,11 +33,45 @@ export default function Reader() {
     fontSize: 18,
   });
 
-  // INITIAL FETCH (and reset when URL changes in single mode)
+  // --- 1. NEURAL SYNC (HEARTBEAT) ---
+  // Sends a pulse to the Analytics model every 60 seconds
+  useEffect(() => {
+    const sendPulse = async () => {
+      // Check if tab is active to ensure data integrity
+      if (document.hidden) return;
+
+      try {
+        const config = { 
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } 
+        };
+        
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/analytics/sync`, 
+          { 
+            novelId, 
+            wordsWritten: 0, 
+            chapterFinished: false 
+          }, 
+          config
+        );
+        console.log("Analytics: Pulse Synchronized.");
+      } catch (err) {
+        console.error("Heartbeat Sync Error:", err);
+      }
+    };
+
+    // Initialize pulse interval
+    const pulse = setInterval(sendPulse, 30000);
+
+    // Cleanup: Stop pulse on exit or novel change
+    return () => clearInterval(pulse);
+  }, [novelId]);
+
+  // --- 2. INITIAL FETCH (Single/Reset) ---
   useEffect(() => {
     if (readingMode === "single") {
       setLoading(true);
       window.scrollTo({ top: 0, behavior: 'instant' }); 
+      
       fetchChapter(novelId, chapterNumber)
         .then((data) => {
           setChapters([data.chapter || data]);
@@ -39,7 +83,7 @@ export default function Reader() {
     }
   }, [novelId, chapterNumber, readingMode]);
 
-  // INFINITE SCROLL FETCH LOGIC
+  // --- 3. INFINITE SCROLL FETCH ---
   const fetchNextChapter = async () => {
     if (!hasNext || isFetchingNext || !nextChapterNum) return;
     
@@ -56,7 +100,7 @@ export default function Reader() {
     }
   };
 
-  // INTERSECTION OBSERVER (The Watcher)
+  // --- 4. INTERSECTION OBSERVER ---
   const observer = useRef();
   const lastElementRef = (node) => {
     if (loading || readingMode !== "infinite") return;
@@ -70,6 +114,7 @@ export default function Reader() {
     if (node) observer.current.observe(node);
   };
 
+  // --- RENDER LOGIC ---
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
       <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -87,58 +132,88 @@ export default function Reader() {
         setSettings(newSettings);
       }}
     >
-      <article className="mx-auto max-w-2xl text-left" style={{ fontSize: `${settings.fontSize}px`, color: "var(--text-main)" }}>
+      <article 
+        className="mx-auto max-w-2xl text-left transition-colors duration-500" 
+        style={{ fontSize: `${settings.fontSize}px`, color: "var(--text-main)" }}
+      >
         
         {chapters.map((ch, index) => (
-          <div key={ch._id || index} className={index > 0 ? "mt-32 pt-20 border-t border-[var(--border)]" : ""}>
+          <section 
+            key={ch._id || index} 
+            className={index > 0 ? "mt-32 pt-20 border-t border-[var(--border)]" : ""}
+          >
             <header className="mb-16 pt-10">
-              <h1 className="text-3xl md:text-4xl font-black mb-4 italic uppercase tracking-tighter leading-[1.1]">
+              <h1 className="text-3xl md:text-5xl font-black mb-4 italic uppercase tracking-tighter leading-[1] text-[var(--text-main)]">
                 {ch.title}
               </h1>
-              <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest">
-                Node: {readingMode === "infinite" ? index + 1 : chapterNumber}
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest">
+                  Transmission {readingMode === "infinite" ? index + 1 : chapterNumber}
+                </p>
+                <div className="h-px flex-1 bg-[var(--border)]" />
+              </div>
             </header>
             
-            <div className="whitespace-pre-wrap leading-relaxed tracking-wide mb-10 font-medium opacity-90">
+            <div className="whitespace-pre-wrap leading-relaxed tracking-wide mb-10 font-medium opacity-90 select-text">
               {ch.content}
             </div>
-          </div>
+          </section>
         ))}
 
-        {/* INFINITE LOADER / SENTINEL */}
+        {/* --- INFINITE LOADER --- */}
         {readingMode === "infinite" && (
-          <div ref={lastElementRef} className="h-40 flex items-center justify-center">
+          <div ref={lastElementRef} className="h-60 flex flex-col items-center justify-center gap-4">
             {isFetchingNext ? (
-               <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+               <>
+                 <FaSync className="text-[var(--accent)] animate-spin" />
+                 <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Next Node...</p>
+               </>
             ) : !hasNext && (
-              <p className="text-[10px] font-black uppercase text-[var(--text-dim)]">--- End of Records ---</p>
+              <div className="text-center opacity-20">
+                <div className="h-px w-20 bg-[var(--text-dim)] mx-auto mb-4" />
+                <p className="text-[10px] font-black uppercase">End of Records</p>
+              </div>
             )}
           </div>
         )}
 
-        {/* SINGLE MODE FOOTER */}
+        {/* --- SINGLE MODE CONTROLS --- */}
         {readingMode === "single" && (
-          <div className="mt-24 border-t border-[var(--border)] pt-16 pb-40">
-            <div className="grid grid-cols-2  gap-10">
+          <footer className="mt-24 border-t border-[var(--border)] pt-16 pb-40">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {parseInt(chapterNumber) > 1 ? (
-                <button onClick={() => navigate(`/novel/${novelId}/chapter/${parseInt(chapterNumber) - 1}`)} className="px-14 py-6 bg-[var(--accent)] rounded-2xl text-white font-black uppercase tracking-[0.2em] text-[11px] shadow-xl">
-                  <FaChevronLeft className="inline-block mr-2" /> Previous Chapter
+                <button 
+                  onClick={() => navigate(`/novel/${novelId}/chapter/${parseInt(chapterNumber) - 1}`)} 
+                  className="flex items-center justify-center gap-3 px-8 py-5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-[var(--text-main)] font-black uppercase tracking-widest text-[10px] hover:border-[var(--accent)] transition-all"
+                >
+                  <FaChevronLeft /> Previous Node
                 </button>
-              ) : (
-                <div></div>
-              )}
+              ) : <div />}
+              
               {hasNext ? (
-                <button onClick={() => navigate(`/novel/${novelId}/chapter/${parseInt(chapterNumber) + 1}`)} className="px-14 py-6 bg-[var(--accent)] rounded-2xl text-white font-black uppercase tracking-[0.2em] text-[11px] shadow-xl">
-                 Next Chapter <FaChevronRight className="inline-block ml-2" />
+                <button 
+                  onClick={() => navigate(`/novel/${novelId}/chapter/${parseInt(chapterNumber) + 1}`)} 
+                  className="flex items-center justify-center gap-3 px-8 py-5 bg-[var(--accent)] rounded-2xl text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[var(--accent)]/20 hover:brightness-110 transition-all"
+                >
+                  Next Transmission <FaChevronRight />
                 </button>
               ) : (
-                <div className="text-emerald-500 font-black uppercase tracking-widest text-[10px]">Transmission Complete</div>
+                <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 text-[10px] font-black uppercase tracking-[0.3em] text-center">
+                  Archive Complete
+                </div>
               )}
             </div>
-          </div>
+          </footer>
         )}
       </article>
+
+      {/* Back to Top for long chapters */}
+      <button 
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-8 right-8 p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-full text-[var(--accent)] shadow-2xl hover:scale-110 transition-transform z-50"
+      >
+        <FaArrowUp />
+      </button>
     </ReaderLayout>
   );
 }

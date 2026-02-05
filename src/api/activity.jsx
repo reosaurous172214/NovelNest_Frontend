@@ -7,9 +7,7 @@ export const fetchUserActivity = async () => {
       `${process.env.REACT_APP_API_URL}/api/activities`,
       getHeaders() // Reusing your dynamic header logic
     );
-
-    // Defensive programming: ensure we return an array even if the response is weird
-    return res.data?.activities || res.data || [];
+    return res.data;
   } catch (error) {
     console.error("Dashboard Activity Fetch Error:", error.response?.data || error.message);
     

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaCrown, FaFire, FaTrophy, FaBolt,
-  FaMagic, FaCheckCircle, FaPlay
+  FaMagic, FaCheckCircle, FaPlay, FaHeart, 
+  FaUserSecret, FaRocket, FaClock, FaEye
 } from "react-icons/fa";
 import axios from "axios";
 
@@ -13,10 +14,11 @@ const handleImageError = (e) => {
 };
 
 /* ================================================================
-    1. SUB-COMPONENTS (Theme-Adaptive)
+    1. SUB-COMPONENTS (Apex Banner & Data Displays)
    ================================================================
 */
 
+// APEX BANNER - UNTOUCHED AS REQUESTED
 const Banner = ({ spotlight }) => {
   const bgImage = spotlight?.coverImage && spotlight.coverImage.startsWith('http') 
     ? spotlight.coverImage 
@@ -127,7 +129,8 @@ const OperationSector = ({ title, sub, icon, data }) => (
 const Home = () => {
   const [data, setData] = useState({
     spotlight: null, popular: [], highlyRated: [], trending: [],
-    action: [], fantasy: [], completed: []
+    action: [], fantasy: [], romance: [], mystery: [], scifi: [], 
+    completed: [], recent: [], sleeper: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -135,7 +138,8 @@ const Home = () => {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/novels`, { params: { limit: 100, sortBy: "views" } });
+        // Limit increased to ensure we have enough data to fill new segments
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/novels`, { params: { limit: 120, sortBy: "views" } });
         const all = res.data.novels || [];
 
         const validNovels = all.filter(n => 
@@ -150,11 +154,16 @@ const Home = () => {
         setData({
           spotlight: randomSpotlight,
           popular: all.slice(0, 5),
-          highlyRated: [...all].sort((a, b) => b.rating - a.rating).slice(0, 5),
+          highlyRated: [...all].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5),
           trending: all.slice(5, 10),
           action: all.filter(n => n.genres?.some(g => g.toLowerCase() === "action")).slice(0, 6),
           fantasy: all.filter(n => n.genres?.some(g => g.toLowerCase() === "fantasy")).slice(0, 6),
+          romance: all.filter(n => n.genres?.some(g => g.toLowerCase() === "romance")).slice(0, 6),
+          mystery: all.filter(n => n.genres?.some(g => g.toLowerCase() === "mystery")).slice(0, 6),
+          scifi: all.filter(n => n.genres?.some(g => g.toLowerCase() === "sci-fi" || g.toLowerCase() === "science fiction")).slice(0, 6),
           completed: all.filter(n => n.status?.toLowerCase() === "completed").slice(0, 6),
+          recent: [...all].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6),
+          sleeper: all.filter(n => (n.views || 0) < 1000 && (n.rating || 0) >= 4).slice(0, 6)
         });
       } catch (err) {
         console.error("Home loading error:", err);
@@ -168,27 +177,83 @@ const Home = () => {
   if (loading) return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center">
       <div className="w-10 h-10 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold animate-pulse">Gathering Stories...</p>
+      <p className="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold animate-pulse">Loading Archive...</p>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] py-12 md:py-20 px-4 md:px-8 transition-colors duration-500">
       
+      {/* FEATURED BANNER */}
       <section className="max-w-7xl mx-auto mb-16 md:mb-20">
         {data.spotlight && <Banner spotlight={data.spotlight} />}
       </section>
 
       <main className="max-w-7xl mx-auto">
+        
+        {/* TOP METRIC PANELS */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-24 md:mb-32">
           <DataPanel title="Most Popular" icon={<FaFire />} data={data.popular} />
           <DataPanel title="Top Rated" icon={<FaCrown />} data={data.highlyRated} />
           <DataPanel title="Trending Now" icon={<FaTrophy />} data={data.trending} />
         </section>
 
-        <OperationSector title="Action" sub="High-Energy Adventures" icon={<FaBolt size={20}/>} data={data.action} />
-        <OperationSector title="Fantasy" sub="Magic & Other Worlds" icon={<FaMagic size={20}/>} data={data.fantasy} />
-        <OperationSector title="Completed" sub="Finished Series" icon={<FaCheckCircle size={20}/>} data={data.completed} />
+        {/* DYNAMIC CATEGORY SECTORS */}
+        <OperationSector 
+          title="New Releases" 
+          sub="Fresh From The Press" 
+          icon={<FaClock size={20}/>} 
+          data={data.recent} 
+        />
+
+        <OperationSector 
+          title="Action" 
+          sub="High-Octane Combat" 
+          icon={<FaBolt size={20}/>} 
+          data={data.action} 
+        />
+
+        <OperationSector 
+          title="Fantasy" 
+          sub="Worlds of Magic" 
+          icon={<FaMagic size={20}/>} 
+          data={data.fantasy} 
+        />
+
+        <OperationSector 
+          title="Romance" 
+          sub="Heartfelt Tales" 
+          icon={<FaHeart size={20}/>} 
+          data={data.romance} 
+        />
+
+        <OperationSector 
+          title="Sci-Fi" 
+          sub="Technological Frontiers" 
+          icon={<FaRocket size={20}/>} 
+          data={data.scifi} 
+        />
+
+        <OperationSector 
+          title="Mystery" 
+          sub="Unravel the Secret" 
+          icon={<FaUserSecret size={20}/>} 
+          data={data.mystery} 
+        />
+
+        <OperationSector 
+          title="Hidden Gems" 
+          sub="Underappreciated Masterpieces" 
+          icon={<FaEye size={20}/>} 
+          data={data.sleeper} 
+        />
+
+        <OperationSector 
+          title="Completed" 
+          sub="Finished Journeys" 
+          icon={<FaCheckCircle size={20}/>} 
+          data={data.completed} 
+        />
       </main>
     </div>
   );
