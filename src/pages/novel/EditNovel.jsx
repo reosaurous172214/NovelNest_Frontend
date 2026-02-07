@@ -46,7 +46,7 @@ export default function EditNovel() {
 
   // Auto-save logic
   useEffect(() => {
-    if (!editingId || !title.trim() || !content.trim()) return;
+    if (!editingId || !title?.trim() || !content?.trim()) return;
     const delayDebounceFn = setTimeout(() => { handleAutoSave(); }, 3000);
     return () => clearTimeout(delayDebounceFn);
   }, [title, content]);
@@ -231,7 +231,7 @@ export default function EditNovel() {
                     </button>
                   )}
                   <button
-                    disabled={saving || !title.trim() || !content.trim()}
+                    disabled={saving || !title?.trim() || !content?.trim()}
                     onClick={addOrUpdateChapter}
                     className="flex-1 py-4 bg-[var(--accent)] text-white rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-30"
                   >

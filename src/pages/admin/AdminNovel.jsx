@@ -112,7 +112,7 @@ export default function AdminNovels() {
                       {novel.title}
                     </td>
                     <td className="p-4 text-[var(--text-dim)]">
-                      {novel.author?.username || "Unknown Author"}
+                      {novel.author?.username || "Anonymous"}
                     </td>
                     <td className="p-4 text-[var(--text-main)]">
                       {novel.totalChapters || 0}

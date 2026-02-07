@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaBook, FaInbox, FaUser, FaPenNib, FaPalette, FaTimes } from "react-icons/fa";
+import { FaHome, FaBook, FaInbox, FaUser, FaPenNib, FaPalette, FaTimes, FaEdit } from "react-icons/fa";
 import Logo from "./AdminLogo";
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { to: '/admin/users', label: 'USERS', icon: <FaUser /> },
     { to: '/admin/activity', label: 'OPERATIONS', icon: <FaPenNib /> },
     { to: '/admin/appearance', label: 'APPEARANCE', icon: <FaPalette /> },
+    { to: '/admin/logs', label: 'MODIFICATIONS', icon: <FaEdit /> },
   ];
 
   return (

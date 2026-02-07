@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Camera, Edit3, Lock, RefreshCw, User, Mail, Globe, Settings, ShieldCheck, Activity, Save, CheckCircle2 } from "lucide-react";
+import { 
+  Camera, Edit3, Lock, RefreshCw, User, Mail, Globe, 
+  Settings, ShieldCheck, Activity, Save, CheckCircle2, Wallet, ExternalLink 
+} from "lucide-react";
 import { useAlert } from "../context/AlertContext";
+import { ethers } from "ethers";
 
 export default function Profile() {
   const { showAlert } = useAlert();
@@ -18,6 +22,7 @@ export default function Profile() {
     theme: "default", language: "en", matureContent: false, notifications: true,
     showEmail: false, showMobile: false, showLocation: true,
     currentPassword: "", newPassword: "", confirmPassword: "",
+    walletAddress: "" // Added walletAddress to form state
   });
 
   useEffect(() => {
@@ -45,6 +50,7 @@ export default function Profile() {
           showEmail: data.privacy?.showEmail || false,
           showMobile: data.privacy?.showMobile || false,
           showLocation: data.privacy?.showLocation || true,
+          walletAddress: data.walletAddress || ""
         }));
 
         setPreview(data.profilePicture ? `${process.env.REACT_APP_API_URL}${data.profilePicture}` : null);
@@ -54,6 +60,35 @@ export default function Profile() {
     };
     fetchProfile();
   }, []);
+
+  /* --- BLOCKCHAIN LOGIC --- */
+  const handleConnectWallet = async () => {
+    if (!window.ethereum) {
+      return showAlert("MetaMask not detected. Please install the extension.", "error");
+    }
+
+    try {
+      setLoading(true);
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      const connectedAddress = accounts[0].toLowerCase();
+
+      const token = localStorage.getItem("token");
+      const { data } = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/auth/updateProfile`, 
+        { walletAddress: connectedAddress },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setUser(data);
+      setForm(prev => ({ ...prev, walletAddress: data.walletAddress }));
+      showAlert("Royalty node uplinked successfully.", "success");
+    } catch (err) {
+      showAlert("Wallet authentication failed.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -177,6 +212,7 @@ export default function Profile() {
             {[
               {id: "Personal", icon: <User size={14}/>},
               {id: "Contact", icon: <Globe size={14}/>},
+              {id: "Royalty", icon: <Wallet size={14}/>}, // NEW BLOCKCHAIN TAB
               {id: "Preferences", icon: <Settings size={14}/>},
               {id: "Privacy", icon: <ShieldCheck size={14}/>},
               {id: "Stats", icon: <Activity size={14}/>},
@@ -205,6 +241,67 @@ export default function Profile() {
                 <InputField label="Identity Tag" name="username" value={form.username} onChange={handleChange} edit={edit} />
                 <TextAreaField label="User Biography" name="bio" value={form.bio} onChange={handleChange} edit={edit} />
                 {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
+              </TabWrapper>
+            )}
+
+            {/* NEW ROYALTY UPLINK TAB CONTENT */}
+            {activeTab === "Royalty" && (
+              <TabWrapper title="Royalty Uplink Protocol">
+                <div className="space-y-6">
+                  <div className="p-8 bg-[var(--bg-primary)] border border-[var(--border)] rounded-[2rem] relative overflow-hidden group">
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--accent)] blur-[100px] opacity-10"></div>
+                    
+                    <div className="relative z-10 space-y-6">
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="text-[var(--accent)]" size={24} />
+                        <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-[0.2em]">
+                          Blockchain Identity: {user.walletAddress ? "Linked" : "Disconnected"}
+                        </h4>
+                      </div>
+
+                      {user.walletAddress ? (
+                        <div className="space-y-4">
+                          <p className="text-[11px] text-[var(--text-dim)] italic leading-relaxed">
+                            Your identity is securely linked to the cryptographic node below. 
+                            Royalties (70%) are automatically routed to this address upon chapter purchase.
+                          </p>
+                          <div className="flex items-center justify-between gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
+                            <code className="text-[10px] font-mono text-[var(--accent)] break-all">{user.walletAddress}</code>
+                            <a href={`https://sepolia.etherscan.io/address/${user.walletAddress}`} target="_blank" rel="noreferrer">
+                                <ExternalLink size={14} className="text-[var(--text-dim)] hover:text-[var(--accent)] transition-all"/>
+                            </a>
+                          </div>
+                          <button onClick={() => setEdit(true)} className="text-[9px] font-black uppercase text-[var(--accent)] tracking-widest hover:underline">Request Node Migration</button>
+                        </div>
+                      ) : (
+                        <div className="space-y-6 text-left">
+                          <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
+                            To activate author royalties, you must uplink a Sepolia-compatible wallet. 
+                            Readers pay in ETH, and our smart contract instantly splits the treasury: 70% to you, 30% to the platform.
+                          </p>
+                          <button 
+                            onClick={handleConnectWallet}
+                            disabled={loading}
+                            className="w-full bg-[var(--accent)] hover:brightness-110 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all shadow-xl shadow-[var(--accent-glow)]"
+                          >
+                            <Wallet size={16}/> {loading ? "Authenticating..." : "Establish MetaMask Uplink"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] text-left">
+                      <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">Treasury Split</p>
+                      <p className="text-2xl font-black italic text-[var(--text-main)]">70% <span className="text-[10px] font-normal text-[var(--text-dim)]">Author</span></p>
+                    </div>
+                    <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] text-left">
+                      <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">Current Earnings</p>
+                      <p className="text-2xl font-black italic text-[var(--accent)]">{user.readingStats?.totalEarnings || "0.00"} <span className="text-[10px] font-normal text-[var(--text-dim)]">ETH</span></p>
+                    </div>
+                  </div>
+                </div>
               </TabWrapper>
             )}
 
@@ -287,6 +384,7 @@ export default function Profile() {
                     <DataRow label="Data Integrity" value="Stable" />
                     <DataRow label="Archive Sector" value={form.country || "GLOBAL"} />
                     <DataRow label="Role" value={user.role || "Reader"} />
+                    <DataRow label="Web3 Uplink" value={user.walletAddress ? "Enabled" : "Disabled"} />
                 </div>
              </div>
           </div>

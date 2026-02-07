@@ -30,6 +30,7 @@ import AdminOperations from "../pages/admin/AdminOperations";
 import AdminNovels from "../pages/admin/AdminNovel";
 import AdminAppearance from "../pages/admin/AdminAppearance";
 import NovelViewPage from  "../pages/admin/AdminNovelViewPage";
+import AdminModification from "../pages/admin/AdminModerationLogs";
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -94,6 +95,7 @@ const AppRoutes = () => {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/activity" element={<AdminOperations />} />
         <Route path="/admin/novels/:id" element={<NovelViewPage/>}/>
+        <Route path="/admin/logs" element={<AdminModification/>}/>
         {/* Pass all theme props here so the appearance page can actually change them */}
         <Route 
           path="/admin/appearance" 

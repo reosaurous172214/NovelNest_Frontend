@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      // Assuming you have a /api/auth/me or /api/users/profile route
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -26,8 +25,14 @@ export function AuthProvider({ children }) {
         localStorage.setItem("data", JSON.stringify(res.data));
       }
     } catch (err) {
-      console.error("Auth Verification Failed:", err.response?.data?.message || "Session expired");
-      logout(); // Clear invalid data
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        console.error("Session expired, logging out...");
+        logout(); 
+      } else {
+        // If the server is down (no response) or has a 500 error, 
+        // DO NOT logout. Keep the 'stored' user data so the UI remains active.
+        console.warn("Server unreachable. Maintaining local session.");
+      }
     } finally {
       setLoading(false);
     }

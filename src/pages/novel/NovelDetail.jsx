@@ -106,6 +106,61 @@ const NovelDetail = () => {
   const glassStyle =
     "bg-[var(--bg-secondary)] opacity-95 backdrop-blur-3xl border border-[var(--border)] shadow-2xl";
 
+  // --- RATING INPUT COMPONENT ---
+  const RatingInput = ({ novelId, currentRating }) => {
+    const [hover, setHover] = useState(0);
+    const [selected, setSelected] = useState(currentRating || 0);
+
+    // Sync stars when novel data loads
+    useEffect(() => {
+      if (currentRating) setSelected(Math.round(currentRating));
+    }, [currentRating]);
+
+    const handleRate = async (score) => {
+      if (!token) {
+        showAlert("Please log in to rate.", "info");
+        return;
+      }
+      try {
+        setSelected(score); // Instant visual feedback
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/novels/${novelId}/rate`,
+          { rating: score },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        showAlert(`Rating synced: ${res.data.averageRating} stars`, "success");
+      } catch (err) {
+        showAlert(err.response?.data?.message || "Failed to rate.", "error");
+      }
+    };
+
+    return (
+      <div className="flex items-center gap-2 bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border)] mb-8 w-fit shadow-inner">
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onMouseEnter={() => setHover(star)}
+              onMouseLeave={() => setHover(0)}
+              onClick={() => handleRate(star)}
+              className="transition-transform active:scale-90 touch-manipulation"
+            >
+              <FaStar
+                size={24}
+                className={`transition-colors duration-200 ${
+                  (hover || selected) >= star ? "text-yellow-400" : "text-[var(--border)]"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+        <span className="ml-4 font-black text-sm text-[var(--text-main)]">
+          {hover || selected || "0"}.0
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-24 relative overflow-hidden transition-colors duration-500">
       {/* Background Glow */}
@@ -244,9 +299,9 @@ const NovelDetail = () => {
               </div>
             )}
 
-            {/* FIXED TAB LOGIC: Check for "reviews" to match the tab ID */}
             {activeTab === "reviews" && (
               <div className="animate-in fade-in duration-500">
+                <RatingInput novelId={id} currentRating={novel.rating} />
                 <CommentUi novelId={id} currentUser={user} />
               </div>
             )}

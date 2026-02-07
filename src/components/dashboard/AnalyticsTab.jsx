@@ -35,11 +35,14 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
 
     const { metrics, history } = data;
 
-    // Map backend history to the chart format
+    // 🔥 MODIFIED: Changed hours to minutes and added a scaling factor for visibility
     const chartData = history.map(day => ({
         day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
-        hours: (day.readingMinutes / 60).toFixed(1)
+        minutes: day.readingMinutes || 0
     }));
+
+    // Find the max minutes in the current history to scale the graph height relatively
+    const maxMinutes = Math.max(...chartData.map(d => d.minutes), 60); // Minimum scale of 60 mins
 
     return (
         <div className="space-y-10 text-left animate-in fade-in duration-700 max-w-7xl mx-auto">
@@ -53,7 +56,7 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    {/* Streak & Continuity Card */}
+                    {/* Continuity Card */}
                     <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-2xl flex flex-col justify-between shadow-sm">
                         <div>
                             <div className="flex items-center justify-between mb-2">
@@ -71,21 +74,25 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
                         </div>
                     </div>
 
-                    {/* Time vs Reading Intensity Graph */}
+                    {/* 🔥 MODIFIED: Reading Intensity Graph (Showing Minutes) */}
                     <div className="lg:col-span-3 bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-2xl">
                         <div className="flex justify-between items-start mb-6">
-                            <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">Reading Intensity / Last 7 Sessions</span>
-                            <span className="text-[10px] font-mono text-[var(--accent)] font-bold">{metrics.totalHours || "0.0"}h Accumulated</span>
+                            <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">Reading Intensity / Daily Minutes</span>
+                            <span className="text-[10px] font-mono text-[var(--accent)] font-bold">{metrics.totalMinutes || 0}m Accumulated</span>
                         </div>
                         <div className="h-32 flex items-end justify-between gap-2 md:gap-4 px-2">
                             {chartData.length > 0 ? chartData.map((d, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center group h-full justify-end">
                                     <div 
                                         className="w-full bg-[var(--border)] group-hover:bg-[var(--accent)] transition-all duration-500 rounded-t-sm relative"
-                                        style={{ height: `${Math.min((d.hours / 5) * 100, 100)}%`, minHeight: '4px' }}
+                                        style={{ 
+                                            // Scale height based on maxMinutes to ensure small values (1-3m) are visible
+                                            height: `${Math.min((d.minutes / maxMinutes) * 1000, 100)}%`, 
+                                            minHeight: d.minutes > 0 ? '6px' : '2px' 
+                                        }}
                                     >
-                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold text-[var(--text-main)] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[var(--bg-primary)] px-1 rounded border border-[var(--border)]">
-                                            {d.hours}h
+                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold text-[var(--text-main)] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[var(--bg-primary)] px-1 rounded border border-[var(--border)] z-10">
+                                            {d.minutes}m
                                         </div>
                                     </div>
                                     <span className="mt-3 text-[8px] font-bold text-[var(--text-dim)] uppercase">{d.day}</span>
@@ -98,7 +105,7 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
                 </div>
             </section>
 
-            {/* SECTOR 2: ARCHITECT PROTOCOL (Author Analytics) */}
+            {/* SECTOR 2: ARCHITECT PROTOCOL */}
             {isAuthor && (
                 <section className="animate-in slide-in-from-bottom-6 duration-1000">
                     <div className="flex items-center gap-3 mb-6">
@@ -108,7 +115,6 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Status Summary Widget */}
                         <div className="bg-[var(--bg-secondary)] border border-[var(--accent)]/20 p-8 rounded-3xl relative overflow-hidden group shadow-lg">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <FaCrown size={80} className="text-[var(--accent)]" />
@@ -128,7 +134,6 @@ const AuthorAnalytics = ({ isAuthor = true }) => {
                             </div>
                         </div>
 
-                        {/* Portfolio Summary */}
                         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <AuthorMetric icon={<FaBook />} label="Manuscripts Authored" value={metrics.published || 0} desc="Verified IP Portfolio" />
                             <AuthorMetric icon={<FaUsers />} label="Neural Engagement" value={`${metrics.favorites || 0}`} desc="Favorited By Users" />

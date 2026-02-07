@@ -19,6 +19,10 @@ export default function Reader() {
   const { novelId, chapterNumber } = useParams();
   const navigate = useNavigate();
   
+  // --- REFS (State Locks) ---
+  const hasFetchedInitial = useRef(false);
+  const observer = useRef();
+
   // --- STATES ---
   const [chapters, setChapters] = useState([]); 
   const [loading, setLoading] = useState(true);
@@ -34,10 +38,8 @@ export default function Reader() {
   });
 
   // --- 1. NEURAL SYNC (HEARTBEAT) ---
-  // Sends a pulse to the Analytics model every 60 seconds
   useEffect(() => {
     const sendPulse = async () => {
-      // Check if tab is active to ensure data integrity
       if (document.hidden) return;
 
       try {
@@ -59,27 +61,40 @@ export default function Reader() {
       }
     };
 
-    // Initialize pulse interval
     const pulse = setInterval(sendPulse, 30000);
-
-    // Cleanup: Stop pulse on exit or novel change
     return () => clearInterval(pulse);
   }, [novelId]);
 
-  // --- 2. INITIAL FETCH (Single/Reset) ---
+  // --- 2. INITIAL FETCH (Double-Increment Fix) ---
   useEffect(() => {
-    if (readingMode === "single") {
-      setLoading(true);
-      window.scrollTo({ top: 0, behavior: 'instant' }); 
-      
-      fetchChapter(novelId, chapterNumber)
-        .then((data) => {
+    // Reset the lock whenever the route parameters change
+    hasFetchedInitial.current = false;
+  }, [novelId, chapterNumber]);
+
+  useEffect(() => {
+    // Only run if we are in single mode and haven't fetched this chapter yet
+    if (readingMode === "single" && !hasFetchedInitial.current) {
+      const loadData = async () => {
+        try {
+          setLoading(true);
+          hasFetchedInitial.current = true; // LOCK: Prevents double-fetch in StrictMode
+          
+          window.scrollTo({ top: 0, behavior: 'instant' }); 
+          
+          const data = await fetchChapter(novelId, chapterNumber);
+          
+          // Sync state with backend response
           setChapters([data.chapter || data]);
           setHasNext(data.hasNext || false);
           setNextChapterNum(data.hasNext ? parseInt(chapterNumber) + 1 : null);
+        } catch (err) {
+          console.error("Transmission Error:", err);
+        } finally {
           setLoading(false);
-        })
-        .catch(() => setLoading(false));
+        }
+      };
+
+      loadData();
     }
   }, [novelId, chapterNumber, readingMode]);
 
@@ -90,6 +105,8 @@ export default function Reader() {
     setIsFetchingNext(true);
     try {
       const data = await fetchChapter(novelId, nextChapterNum);
+      
+      // Append new chapter to existing list
       setChapters(prev => [...prev, data.chapter || data]);
       setHasNext(data.hasNext || false);
       setNextChapterNum(data.hasNext ? nextChapterNum + 1 : null);
@@ -101,20 +118,20 @@ export default function Reader() {
   };
 
   // --- 4. INTERSECTION OBSERVER ---
-  const observer = useRef();
   const lastElementRef = (node) => {
     if (loading || readingMode !== "infinite") return;
     if (observer.current) observer.current.disconnect();
     
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasNext) {
+      // isIntersecting ensures we only fetch when the loader is visible
+      if (entries[0].isIntersecting && hasNext && !isFetchingNext) {
         fetchNextChapter();
       }
     });
     if (node) observer.current.observe(node);
   };
 
-  // --- RENDER LOGIC ---
+  // --- LOADING UI ---
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
       <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -128,7 +145,11 @@ export default function Reader() {
       fontClass={fontMap[settings.font]} 
       settings={{...settings, readingMode}} 
       setSettings={(newSettings) => {
-        if (newSettings.readingMode) setReadingMode(newSettings.readingMode);
+        if (newSettings.readingMode) {
+          setReadingMode(newSettings.readingMode);
+          // If switching back to single, we want to reset the view
+          if (newSettings.readingMode === "single") hasFetchedInitial.current = false;
+        }
         setSettings(newSettings);
       }}
     >
@@ -148,7 +169,7 @@ export default function Reader() {
               </h1>
               <div className="flex items-center gap-4">
                 <p className="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest">
-                  Transmission {readingMode === "infinite" ? index + 1 : chapterNumber}
+                  Transmission {readingMode === "infinite" ? ch.chapterNumber : chapterNumber}
                 </p>
                 <div className="h-px flex-1 bg-[var(--border)]" />
               </div>
@@ -160,7 +181,7 @@ export default function Reader() {
           </section>
         ))}
 
-        {/* --- INFINITE LOADER --- */}
+        {/* --- INFINITE LOADER TARGET --- */}
         {readingMode === "infinite" && (
           <div ref={lastElementRef} className="h-60 flex flex-col items-center justify-center gap-4">
             {isFetchingNext ? (
@@ -207,7 +228,6 @@ export default function Reader() {
         )}
       </article>
 
-      {/* Back to Top for long chapters */}
       <button 
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="fixed bottom-8 right-8 p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-full text-[var(--accent)] shadow-2xl hover:scale-110 transition-transform z-50"
