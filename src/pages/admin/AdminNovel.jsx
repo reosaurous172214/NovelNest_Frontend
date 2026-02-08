@@ -1,154 +1,201 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  FaTrash,
-  FaEdit,
-  FaExternalLinkAlt,
-  FaExclamationTriangle,
-} from "react-icons/fa";
+import { 
+  LuTrash2, 
+  LuFilePenLine, 
+  LuExternalLink, 
+  LuTriangleAlert, 
+  LuSearch, 
+  LuBookOpen, 
+  LuFilter,
+  LuBook
+} from "react-icons/lu";
 import { fetchAllNovels, deleteNovel } from "../../api/apiAdmin.js";
 import { useAlert } from "../../context/AlertContext.jsx";
+import NovelDrawer from "../../components/admin/NovelDrawer.jsx";
+
 export default function AdminNovels() {
   const [novels, setNovels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-    const navigate = useNavigate();
-  // Modal State
+  
+  // Sidebar Panel State
+  const [drawerNovel, setDrawerNovel] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Confirmation Box State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNovel, setSelectedNovel] = useState(null);
   const { showAlert } = useAlert();
+
   useEffect(() => {
     loadNovels();
   }, []);
 
   const loadNovels = async () => {
-    setLoading(true);
-    const data = await fetchAllNovels();
-    setNovels(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const data = await fetchAllNovels();
+      setNovels(Array.isArray(data) ? data : []);
+    } catch (err) {
+      showAlert("Failed to sync records", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // OPEN MODAL
+  const handleOpenDrawer = (novel) => {
+    setDrawerNovel(novel);
+    setIsDrawerOpen(true);
+  };
+
   const confirmDelete = (novel) => {
     setSelectedNovel(novel);
     setIsModalOpen(true);
   };
 
-  // ACTUAL DELETE LOGIC
   const deleteHandler = async () => {
     if (!selectedNovel) return;
-
-    const success = await deleteNovel(
-      selectedNovel._id,
-      "Policy Violation / Admin Action",
-    );
-
-    if (success) {
-      setNovels((prev) => prev.filter((n) => n._id !== selectedNovel._id));
-      showAlert("Deleted Novel Successfully", "success");
-      setIsModalOpen(false);
-      setSelectedNovel(null);
-    } else {
-      alert("Error deleting novel. Please try again.");
+    try {
+      const success = await deleteNovel(selectedNovel._id, "Policy Violation / Admin Action");
+      if (success) {
+        setNovels((prev) => prev.filter((n) => n._id !== selectedNovel._id));
+        showAlert("Record removed successfully", "success");
+        setIsModalOpen(false);
+        setSelectedNovel(null);
+      }
+    } catch (err) {
+      showAlert("System error during removal", "error");
     }
   };
 
-  // --- CRITICAL FIX: Define filteredNovels here ---
   const filteredNovels = novels.filter((novel) =>
-    novel.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    novel.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const renderCoverPic = (novel) => {
+    const hasCover = novel.coverImage && typeof novel.coverImage === 'string';
+    const isExternal = hasCover && novel.coverImage.startsWith('http');
+    const imgSrc = isExternal ? novel.coverImage : `${process.env.REACT_APP_API_URL}/${novel.coverImage}`;
+
+    return (
+      <div className="w-10 h-14 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-primary)] flex-shrink-0 flex items-center justify-center">
+        {hasCover ? (
+          <img 
+            src={imgSrc} 
+            alt="" 
+            className="w-full h-full object-cover" 
+            onError={(e) => { 
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }} 
+          />
+        ) : null}
+        <div className={`${hasCover ? 'hidden' : 'flex'} items-center justify-center text-[var(--text-dim)]`}>
+          <LuBook size={20} />
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="relative">
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
-        {/* Header Section */}
-        <div className="p-6 border-b border-[var(--border)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h2 className="text-xl font-bold text-[var(--text-main)]">
-            Novel Database
-          </h2>
-          <div className="relative w-full md:w-64">
+    <div className="p-8 bg-[var(--bg-primary)] min-h-screen font-sans text-[var(--text-main)]">
+      
+      {/* HEADER SECTION */}
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-main)]">Content Ledger</h1>
+          <p className="text-[var(--text-dim)] text-sm">Official directory of all hosted stories and titles.</p>
+        </div>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-grow md:flex-grow-0">
+            <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" size={16} />
             <input
               type="text"
               placeholder="Search by title..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] px-4 py-2 rounded-lg text-sm outline-none focus:border-[var(--accent)] transition-colors text-[var(--text-main)]"
+              className="w-full md:w-64 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] outline-none transition-all shadow-sm text-[var(--text-main)]"
             />
           </div>
+          <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text-main)] shadow-sm transition-all">
+            <LuFilter size={14} />
+            Filter
+          </button>
         </div>
+      </div>
 
-        {/* Responsive Table Wrapper */}
+      {/* DATA TABLE */}
+      <div className="max-w-7xl mx-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[700px]">
-            <thead className="bg-[var(--bg-primary)] text-[var(--text-dim)] text-xs uppercase tracking-wider">
-              <tr>
-                <th className="p-4 font-semibold">Title</th>
-                <th className="p-4 font-semibold">Author</th>
-                <th className="p-4 font-semibold">Chapters</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 text-right font-semibold">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[var(--bg-primary)] border-b border-[var(--border)]">
+                <th className="px-6 py-4 text-[11px] uppercase font-bold tracking-wider text-[var(--text-dim)]">Title & Identity</th>
+                <th className="px-6 py-4 text-[11px] uppercase font-bold tracking-wider text-[var(--text-dim)]">Author</th>
+                <th className="px-6 py-4 text-[11px] uppercase font-bold tracking-wider text-[var(--text-dim)]">Chapters</th>
+                <th className="px-6 py-4 text-[11px] uppercase font-bold tracking-wider text-[var(--text-dim)]">Status</th>
+                <th className="px-6 py-4 text-[11px] uppercase font-bold tracking-wider text-[var(--text-dim)] text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-[var(--border)] text-xs">
               {loading ? (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="p-20 text-center text-[var(--text-dim)]"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-                      <span>Fetching records...</span>
-                    </div>
-                  </td>
-                </tr>
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan="5" className="px-6 py-8"><div className="h-10 bg-[var(--bg-primary)] rounded-lg w-full"></div></td>
+                  </tr>
+                ))
               ) : filteredNovels.length > 0 ? (
                 filteredNovels.map((novel) => (
-                  <tr
-                    key={novel._id}
-                    className="hover:bg-white/[0.02] transition-colors group"
-                  >
-                    <td className="p-4 font-medium text-[var(--text-main)]">
-                      {novel.title}
+                  <tr key={novel._id} className="hover:bg-[var(--bg-primary)] transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        {renderCoverPic(novel)}
+                        <div>
+                          <div className="text-sm font-semibold text-[var(--text-main)] group-hover:text-[var(--accent)] transition-colors">
+                            {novel.title}
+                          </div>
+                          <div className="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-tighter mt-0.5">ID: {novel._id.slice(-6)}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="p-4 text-[var(--text-dim)]">
-                      {novel.author?.username || "Anonymous"}
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-[var(--text-dim)] font-medium">
+                        {novel.author?.username || "Anonymous"}
+                      </div>
                     </td>
-                    <td className="p-4 text-[var(--text-main)]">
-                      {novel.totalChapters || 0}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-sm text-[var(--text-main)] font-mono">
+                        <LuBookOpen size={14} className="text-[var(--text-dim)]" />
+                        {novel.totalChapters || 0}
+                      </div>
                     </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                          novel.isPublished
-                            ? "bg-green-500/10 text-green-500"
-                            : "bg-yellow-500/10 text-yellow-500"
-                        }`}
-                      >
-                        {novel.isPublished ? "Published" : "Draft"}
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${
+                        novel.isPublished 
+                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                        : "bg-[var(--bg-primary)] text-[var(--text-dim)] border-[var(--border)]"
+                      }`}>
+                        {novel.isPublished ? "Active" : "Draft"}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-3 text-[var(--text-dim)]">
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center items-center gap-2">
                         <button
-                          onClick={() => navigate(`/admin/novels/${novel._id}`)}
-                          title="View"
-                          className="hover:text-[var(--accent)] transition-colors"
+                          onClick={() => handleOpenDrawer(novel)}
+                          className="p-2 text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-primary)] rounded-lg transition-all"
+                          title="View Details"
                         >
-                          <FaExternalLinkAlt />
+                          <LuExternalLink size={16} />
                         </button>
-                        <button
-                          title="Edit"
-                          className="hover:text-blue-500 transition-colors"
-                        >
-                          <FaEdit />
+                        <button className="p-2 text-[var(--text-dim)] hover:text-blue-500 hover:bg-[var(--bg-primary)] rounded-lg transition-all">
+                          <LuFilePenLine size={16} />
                         </button>
                         <button
                           onClick={() => confirmDelete(novel)}
-                          title="Delete"
-                          className="hover:text-red-500 transition-colors"
+                          className="p-2 text-[var(--text-dim)] hover:text-red-500 hover:bg-[var(--bg-primary)] rounded-lg transition-all"
                         >
-                          <FaTrash />
+                          <LuTrash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -156,11 +203,8 @@ export default function AdminNovels() {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="5"
-                    className="p-20 text-center text-[var(--text-dim)]"
-                  >
-                    No novels found.
+                  <td colSpan="5" className="px-6 py-20 text-center text-[var(--text-dim)]">
+                    No records found in current view.
                   </td>
                 </tr>
               )}
@@ -169,38 +213,46 @@ export default function AdminNovels() {
         </div>
       </div>
 
-      {/* --- CONFIRMATION MODAL --- */}
+      {/* SIDE INFORMATION PANEL */}
+      <NovelDrawer 
+        novel={drawerNovel} 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+      />
+
+      {/* REMOVAL CONFIRMATION BOX */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in zoom-in duration-200">
-            <div className="flex items-center gap-4 text-red-500 mb-4">
-              <div className="p-3 bg-red-500/10 rounded-full text-red-500">
-                <FaExclamationTriangle size={24} />
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[var(--bg-secondary)] rounded-2xl shadow-2xl border border-[var(--border)] animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl border border-red-500/20">
+                  <LuTriangleAlert size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[var(--text-main)]">Remove Record</h3>
+                  <p className="text-xs text-[var(--text-dim)] uppercase tracking-widest font-bold">Action required</p>
+                </div>
               </div>
-              <h3 className="text-xl font-bold">Confirm Deletion</h3>
+
+              <p className="text-sm text-[var(--text-dim)] mb-6 leading-relaxed">
+                You are about to permanently remove <span className="font-bold text-[var(--text-main)]">"{selectedNovel?.title}"</span>. 
+                This will clear all details and chapters from the system.
+              </p>
             </div>
 
-            <p className="text-[var(--text-dim)] mb-6">
-              Are you sure you want to delete{" "}
-              <span className="text-[var(--text-main)] font-semibold">
-                "{selectedNovel?.title}"
-              </span>
-              ? This action cannot be undone and will remove all associated
-              chapters.
-            </p>
-
-            <div className="flex gap-3 justify-end">
+            <div className="p-4 bg-[var(--bg-primary)] border-t border-[var(--border)] flex gap-3 rounded-b-2xl">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2 rounded-xl text-[var(--text-main)] bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-white/5 transition"
+                className="flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteHandler}
-                className="px-5 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition"
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-red-700 shadow-lg shadow-red-500/20 transition-all active:scale-95"
               >
-                Delete Novel
+                Confirm Removal
               </button>
             </div>
           </div>

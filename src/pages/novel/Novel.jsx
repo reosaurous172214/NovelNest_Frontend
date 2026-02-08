@@ -212,18 +212,9 @@ const Novels = () => {
           </div>
         </aside>
 
-        <main className="flex-1 space-y-12">
+        <main className="flex-1 space-y-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter">
-                {searchParam ? `Results for "${searchParam}"` : "Browse Novels"}
-              </h1>
-              <p className="text-[10px] font-bold text-[var(--accent)] tracking-widest uppercase">
-                Showing {startIdx + 1}-
-                {Math.min(startIdx + ITEMS_PER_PAGE, novels.length)} of{" "}
-                {novels.length} novels
-              </p>
-            </div>
+            
 
             <button
               onClick={() => setShowFilters(true)}

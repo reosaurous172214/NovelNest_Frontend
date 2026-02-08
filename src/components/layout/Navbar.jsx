@@ -206,7 +206,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                         <DropdownItem to="/settings" icon={<FaCog />} label="Settings" />
                         {user?.role === 'admin' && <DropdownItem to="/admin" icon={<FaShieldAlt />} label="Admin Panel" />}
                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] font-black uppercase mt-1 border-t border-[var(--border)]">
-                          <FaSignOutAlt /> Sign Out
+                          <FaSignOutAlt  size={18}/> Log Out
                         </button>
                       </div>
                     </div>
@@ -286,12 +286,12 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
 const NavItem = ({ to, icon, label, active }) => (
   <Link to={to} className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl transition-all group ${active ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-primary)]"}`}>
     <span className="text-sm">{icon}</span>
-    <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+    <span className="text-[12px] font-semibold uppercase tracking-widest">{label}</span>
   </Link>
 );
 
 const DropdownItem = ({ to, icon, label }) => (
-  <Link to={to} className="flex items-center gap-3 px-4 py-2.5 text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--accent)]/10 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest group">
+  <Link to={to} className="flex items-center gap-3 px-4 py-2.5 text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--accent)]/10 rounded-xl transition-all text-[11px] font-semibold uppercase  group">
     <span>{icon}</span> {label}
   </Link>
 );

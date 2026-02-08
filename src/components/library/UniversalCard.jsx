@@ -10,7 +10,7 @@ const UniversalCard = ({ novel, showProgress, showDelete, onRead, onDelete }) =>
         <div className="group relative w-[165px] md:w-[190px] flex flex-col gap-3 transition-all duration-300">
             
             {/* 1. ART COVER CONTAINER */}
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/5 shadow-lg ">
                 <img 
                     src={imageUrl} 
                     alt={novel.title} 

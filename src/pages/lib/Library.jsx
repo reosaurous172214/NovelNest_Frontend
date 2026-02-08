@@ -143,14 +143,6 @@ const Library = ({ isDash = false }) => {
         {/* NAV & CONTROLS BAR */}
         <nav className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 border-b border-[var(--border)] pb-8">
           <div className="flex flex-col gap-2">
-            {!isDash && (
-              <div className="flex items-center gap-3 mb-2">
-                <IoLibrary className="text-[var(--accent)] text-2xl" />
-                <h1 className="text-3xl font-black uppercase italic tracking-tighter">
-                  Library
-                </h1>
-              </div>
-            )}
             <div className="bg-[var(--bg-secondary)] rounded-full p-1.5 flex gap-1 border border-[var(--border)] overflow-x-auto no-scrollbar shadow-inner">
               {[
                 [TABS.HISTORY, "History", <FaHistory />],

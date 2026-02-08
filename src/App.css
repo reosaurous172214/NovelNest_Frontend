@@ -77,40 +77,38 @@
 }
 
 /* --- HIGH-TECH ADMIN THEMES --- */
-
-/* Neon Velocity (Dark Tech) */
+/* 🌌 Ethereal Midnight (Deep Glass Tech) */
 .theme-admin-tech-dark {
-  --bg-primary: #050505;
-  --bg-secondary: #0f172a;
-  --text-main: #f8fafc;
-  --text-dim: #94a3b8;
-  --accent: #22d3ee;
-  --accent-glow: rgba(34, 211, 238, 0.3);
-  --border: rgba(34, 211, 238, 0.2);
+  --bg-primary: #020617;      /* Deeper Slate-950 */
+  --bg-secondary: #0f172a;    /* Slate-900 for Glass depth */
+  --text-main: #f1f5f9;       /* Slate-100 */
+  --text-dim: #64748b;        /* Slate-400 */
+  --accent: #38bdf8;          /* Sky-400 */
+  --accent-glow: rgba(56, 189, 248, 0.25);
+  --border: rgba(255, 255, 255, 0.05); /* Very thin white for glass edge */
 }
 
-/* Medical Lab (Light Tech 1) */
+/* 🏔️ Arctic Frost (High-Contrast Light) */
 .theme-admin-tech-light-1 {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --text-main: #0f172a;
-  --text-dim: #64748b;
-  --accent: #f97316;
-  --accent-glow: rgba(249, 115, 22, 0.15);
-  --border: rgba(15, 23, 42, 0.08);
+  --bg-primary: #f1f5f9;      /* Slate-100 */
+  --bg-secondary: rgba(255, 255, 255, 0.7); /* Translucent White */
+  --text-main: #0f172a;       /* Slate-900 */
+  --text-dim: #475569;        /* Slate-600 */
+  --accent: #6366f1;          /* Indigo-500 */
+  --accent-glow: rgba(99, 102, 241, 0.1);
+  --border: rgba(0, 0, 0, 0.05);
 }
 
-/* Synthetix (Light Tech 2) */
+/* 🌿 Emerald Horizon (Vibrant Professional) */
 .theme-admin-tech-light-2 {
-  --bg-primary: #f0fdf4;
+  --bg-primary: #fafafa;      /* Pure Neutral */
   --bg-secondary: #ffffff;
-  --text-main: #064e3b;
-  --text-dim: #059669;
-  --accent: #10b981;
-  --accent-glow: rgba(16, 185, 129, 0.15);
-  --border: rgba(16, 185, 129, 0.1);
+  --text-main: #171717;       /* Neutral-900 */
+  --text-dim: #737373;        /* Neutral-500 */
+  --accent: #059669;          /* Emerald-600 */
+  --accent-glow: rgba(5, 150, 105, 0.12);
+  --border: rgba(5, 150, 105, 0.08);
 }
-
 /* --- BASE STYLES --- */
 
 * {

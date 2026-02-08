@@ -55,13 +55,10 @@ export default function Settings({ currentTheme = "default", setTheme }) {
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12">
         
         {/* --- SIDEBAR --- */}
-        <aside className="w-full lg:w-72 space-y-4">
-          <div className="px-4 mb-8">
-            <h1 className="text-3xl font-black italic uppercase tracking-tighter">System</h1>
-            <p className="text-[10px] font-mono text-[var(--accent)] uppercase tracking-[0.3em] mt-2">Config Console</p>
-          </div>
+        <aside className="w-full lg:w-72 space-y-6">
           
-          <nav className="space-y-2">
+          
+          <nav className="space-y-4">
             <SettingsTab 
               icon={<FaPalette />} label="Visuals" active={activeSection === "interface"} 
               onClick={() => setActiveSection("interface")} 
