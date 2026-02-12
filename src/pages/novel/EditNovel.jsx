@@ -8,6 +8,7 @@ import {
   FaCloudUploadAlt, FaFeatherAlt, FaLayerGroup, FaHistory, FaTimes
 } from "react-icons/fa";
 import { useAlert } from "../../context/AlertContext";
+import { getHeaders } from "../../getItems/getAuthItems";
 
 export default function EditNovel() {
   const { id } = useParams();
@@ -82,7 +83,7 @@ export default function EditNovel() {
     setSaving(true);
     try {
       if (editingId) {
-        await axios.put(`${process.env.REACT_APP_API_URL}/api/chapters/${editingId}`, { title, content }, authConfig);
+        await axios.put(`${process.env.REACT_APP_API_URL}/api/chapters/${editingId}`, { title, content }, getHeaders());
         showAlert("Chapter Updated", "success");
         setChapters(prev => prev.map(ch => ch._id === editingId ? { ...ch, title, content } : ch));
       } else {

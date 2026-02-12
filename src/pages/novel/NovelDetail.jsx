@@ -14,9 +14,11 @@ import {
   FaShieldAlt,
   FaChevronDown,
   FaBookmark,
+  FaLock,        // Added Lock
+  FaUnlock,      // Added Unlock
 } from "react-icons/fa";
 import { useAddFavourites } from "../../hooks/useFavourites";
-import { useAddBookmark } from "../../hooks/useBookmarks"; // Added Bookmark hook
+import { useAddBookmark } from "../../hooks/useBookmarks"; 
 import { getToken } from "../../getItems/getAuthItems";
 import { useAlert } from "../../context/AlertContext";
 import { useAuth } from "../../context/AuthContext";
@@ -36,7 +38,7 @@ const NovelDetail = () => {
   const saveMenuRef = useRef(null);
 
   const { addToFavourites, adding: favAdding } = useAddFavourites();
-  const { addToBookmark, adding: bookAdding } = useAddBookmark(); // Hook for bookmarks
+  const { addToBookmark, adding: bookAdding } = useAddBookmark(); 
   
   const { user } = useAuth();
   const { showAlert } = useAlert();
@@ -68,7 +70,6 @@ const NovelDetail = () => {
     };
     fetchNovel();
 
-    // Close dropdown on click outside
     const handleClickOutside = (event) => {
       if (saveMenuRef.current && !saveMenuRef.current.contains(event.target)) {
         setShowSaveMenu(false);
@@ -163,7 +164,6 @@ const NovelDetail = () => {
                   <FaPlay size={10} /> Start Reading
                 </Link>
                 
-                {/* SAVING DROPDOWN MENU */}
                 <div className="relative" ref={saveMenuRef}>
                   <button
                     onClick={() => setShowSaveMenu(!showSaveMenu)}
@@ -247,16 +247,33 @@ const NovelDetail = () => {
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-20 gap-y-3">
-                  {visibleChapters.map((ch) => (
-                    <Link key={ch._id} to={`/novel/${id}/chapter/${ch.chapterNumber}`} className={`group flex items-center p-4 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition-all ${balancedRounded} shadow-sm`}>
-                      <span className={`w-10 h-10 flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--accent)] text-[10px] font-black group-hover:bg-[var(--accent)] group-hover:text-white transition-all ${balancedRounded}`}>
-                        {ch.chapterNumber}
-                      </span>
-                      <div className="ml-4 min-w-0">
-                        <span className="block text-[11px] font-bold text-[var(--text-main)] truncate uppercase">{ch.title}</span>
-                      </div>
-                    </Link>
-                  ))}
+                  {visibleChapters.map((ch) => {
+                    // Lock Check Logic
+                    const isUnlocked = user?.unlockedChapters?.some(id => id.toString() === ch._id.toString());
+                    const isFree = ch.chapterNumber <= (novel.freeChapters || 10); // Fallback to 5 if not defined
+
+                    return (
+                      <Link key={ch._id} to={`/novel/${id}/chapter/${ch.chapterNumber}`} className={`group flex items-center p-4 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition-all ${balancedRounded} shadow-sm`}>
+                        <span className={`w-10 h-10 flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--accent)] text-[10px] font-black group-hover:bg-[var(--accent)] group-hover:text-white transition-all ${balancedRounded}`}>
+                          {ch.chapterNumber}
+                        </span>
+                        <div className="ml-4 flex-1 min-w-0 flex items-center justify-between">
+                          <span className="block text-[11px] font-bold text-[var(--text-main)] truncate uppercase">{ch.title}</span>
+                          
+                          {/* ICON LOGIC */}
+                          {!isFree && (
+                            <div className="ml-2">
+                              {isUnlocked ? (
+                                <FaUnlock size={10} className="text-emerald-500 opacity-60" />
+                              ) : (
+                                <FaLock size={10} className="text-[var(--text-dim)] group-hover:text-[var(--accent)]" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}

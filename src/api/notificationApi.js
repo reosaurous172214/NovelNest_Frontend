@@ -11,7 +11,7 @@ export const notificationApi = {
   // Mark one or all as read
   markAsRead: async (id = null) => {
     const url = id ? `${API_URL}/read/${id}` : `${API_URL}/read`;
-    const res = await axios.patch(url,getHeaders());
+    const res = await axios.patch(url,{},getHeaders());
     return res.data;
   },
   // Clear the whole history

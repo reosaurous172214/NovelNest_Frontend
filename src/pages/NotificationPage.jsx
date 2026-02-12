@@ -163,7 +163,7 @@ const NotificationsPage = () => {
                     <div className="text-[14px] text-[var(--text-main)] leading-relaxed">
                       <span className="font-black text-[var(--accent)]">{n.sender?.username || "System"}</span>
                       <span className="mx-1">
-                        {n.type === 'REPLY' ? 'replied to your comment in' : n.type === 'LIKE' ? 'liked your comment in' : 'published a new chapter for'}
+                        {n.type === 'REPLY' ? 'replied to your comment in' : n.type === 'LIKE' ? 'liked your comment in' : n.type === 'EARNING' ? 'purchased a chapter of' : 'published a new chapter for'}
                       </span>
                       <span className="font-bold underline decoration-[var(--border)] group-hover:decoration-[var(--accent)]">
                          {n.novelId?.title}

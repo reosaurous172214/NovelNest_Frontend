@@ -21,6 +21,9 @@ import NovelUploads from "../pages/novel/NovelUploads";
 import Library from "../pages/lib/Library";
 import Settings from "../pages/Settings";
 import Notification from "../pages/NotificationPage";
+import Wallet from "../pages/Wallet";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import AuthSuccess from "../pages/AuthSuccess";
 
 // Admin Pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -28,6 +31,8 @@ import AdminRequests from "../pages/admin/AdminRequest";
 import AdminOperations from "../pages/admin/AdminOperations";
 import AdminNovels from "../pages/admin/AdminNovel";
 import AdminAppearance from "../pages/admin/AdminAppearance";
+import RequestPage from "../pages/request/RequestPage";
+import AdminAudits from "../pages/admin/AdminAudit";
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -72,8 +77,12 @@ const AppRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/wallet" element={<Wallet/>}/>
         <Route path="/novels" element={<Novel />} />
+        <Route path="/auth-success" element={<AuthSuccess />} />
         <Route path="/novel/create" element={<CreateNovel />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path = '/request' element = {<RequestPage/>}/>
         <Route path="/novel/edit/:id" element={<EditNovel />} />
         <Route path="/novel/author/me" element={<NovelUploads />} />
         <Route path="/novel/:id" element={<NovelDetail />} />
@@ -89,6 +98,7 @@ const AppRoutes = () => {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/novels" element={<AdminNovels />} />
         <Route path="/admin/requests" element={<AdminRequests />} />
+        <Route path="/admin/audit" element={<AdminAudits/>}/>
         <Route path="/admin/activity" element={<AdminOperations />} />
         {/* Pass all theme props here so the appearance page can actually change them */}
         <Route 

@@ -5,9 +5,9 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [wallet, setWallet] = useState(null); // Global wallet state
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch the latest user data from the backend
   const checkUserStatus = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -16,22 +16,24 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Parallel request to get both Profile and Wallet data
+      const [userRes, walletRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/payments/wallet`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ]);
 
-      if (res.data) {
-        setUser(res.data);
-        localStorage.setItem("data", JSON.stringify(res.data));
+      if (userRes.data) {
+        setUser(userRes.data);
+        setWallet(walletRes.data);
+        localStorage.setItem("data", JSON.stringify(userRes.data));
       }
     } catch (err) {
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        console.error("Session expired, logging out...");
         logout(); 
-      } else {
-        // If the server is down (no response) or has a 500 error, 
-        // DO NOT logout. Keep the 'stored' user data so the UI remains active.
-        console.warn("Server unreachable. Maintaining local session.");
       }
     } finally {
       setLoading(false);
@@ -39,13 +41,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // 1. Initial check from LocalStorage for immediate UI response
     const stored = localStorage.getItem("data");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
-    
-    // 2. Background verification to ensure token is still valid
+    if (stored) setUser(JSON.parse(stored));
     checkUserStatus();
   }, [checkUserStatus]);
 
@@ -53,23 +50,27 @@ export function AuthProvider({ children }) {
     if (token) localStorage.setItem("token", token);
     localStorage.setItem("data", JSON.stringify(userData));
     setUser(userData);
+    checkUserStatus(); // Refresh wallet immediately after login
   };
 
   const logout = () => {
     localStorage.removeItem("data");
     localStorage.removeItem("token");
     setUser(null);
+    setWallet(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        wallet,
+        setWallet, // Allow manual updates after purchases
         login,
         logout,
         loading,
         isAuthenticated: !!user,
-        refreshUser: checkUserStatus // Useful if user updates their profile
+        refreshUser: checkUserStatus
       }}
     >
       {children}
@@ -79,8 +80,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

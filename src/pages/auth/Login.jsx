@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2 } from "lucide-react"; // Import a Google icon if you have one, or use an img
 import { useAlert } from "../../context/AlertContext";
 import NovelHubLogo from "../../components/layout/Logo";
 
@@ -9,6 +9,12 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Google Login Handler
+    const handleGoogleLogin = () => {
+        // Redirect directly to your backend Google route
+        window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
+    };
 
     const loginHandler = async (e) => {
         e.preventDefault();
@@ -120,6 +126,31 @@ export default function Login() {
                         </span>
                     </button>
                 </form>
+
+                {/* OR Divider */}
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-[var(--border)] opacity-50"></div>
+                    </div>
+                    <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em] text-[var(--text-dim)]">
+                        <span className="bg-[var(--bg-secondary)] px-4">Or</span>
+                    </div>
+                </div>
+
+                {/* Google Button */}
+                <button
+                    onClick={handleGoogleLogin}
+                    className="w-full py-4 rounded-2xl bg-white/5 border border-[var(--border)] hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95 group"
+                >
+                    <img 
+                        src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" 
+                        alt="G" 
+                        className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                    />
+                    <span className="text-[var(--text-main)] text-[10px] font-bold uppercase tracking-widest">
+                        Continue with Google
+                    </span>
+                </button>
 
                 {/* Footer */}
                 <div className="mt-10 flex flex-col items-center space-y-4">

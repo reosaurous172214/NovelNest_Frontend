@@ -24,7 +24,13 @@ export default function Register() {
         setPreview(URL.createObjectURL(file));
     };
 
-    // Step 1: Request OTP and validate local details
+    /* ================= GOOGLE AUTH HANDLER ================= */
+    const handleGoogleRegister = () => {
+        // Direct redirect to backend to start the Google OAuth cycle
+        window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
+    };
+
+    /* ================= STEP 1: REQUEST OTP ================= */
     const handleRequestOTP = async (e) => {
         e.preventDefault();
         setError("");
@@ -36,11 +42,13 @@ export default function Register() {
 
         setLoading(true);
         try {
-            // Call the backend endpoint to send OTP
-            await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/send-otp`, { email ,type:"new"});
+            await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/send-otp`, { 
+                email, 
+                type: "new" 
+            });
             
             showAlert("Verification code sent to your email!", "success");
-            setStep(2); // Move to OTP input step
+            setStep(2);
         } catch (err) {
             showAlert(err.response?.data?.message || "Failed to send verification code");
         } finally {
@@ -48,7 +56,7 @@ export default function Register() {
         }
     };
 
-    // Step 2: Finalize Registration with OTP
+    /* ================= STEP 2: FINALIZE REGISTRATION ================= */
     const registerHandler = async (e) => {
         e.preventDefault();
         setError("");
@@ -57,7 +65,7 @@ export default function Register() {
         formData.append("username", username);
         formData.append("email", email);
         formData.append("password", password);
-        formData.append("otpCode", otp); // Send the OTP for verification
+        formData.append("otpCode", otp); 
         if (avatar) formData.append("profilePicture", avatar);
 
         setLoading(true);
@@ -101,23 +109,51 @@ export default function Register() {
                     </p>
                 </div>
 
+                {/* GOOGLE FAST-TRACK (Step 1 Only) */}
+                {step === 1 && (
+                    <div className="animate-in fade-in duration-700">
+                        <button
+                            onClick={handleGoogleRegister}
+                            className="w-full py-4 rounded-2xl bg-white/5 border border-[var(--border)] hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95 group mb-6"
+                        >
+                            <img 
+                                src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" 
+                                alt="G" 
+                                className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                            />
+                            <span className="text-[var(--text-main)] text-[10px] font-bold uppercase tracking-widest">
+                                Fast Track with Google
+                            </span>
+                        </button>
+
+                        <div className="relative mb-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[var(--border)] opacity-30"></div>
+                            </div>
+                            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em] text-[var(--text-dim)]">
+                                <span className="bg-[var(--bg-secondary)] px-4">Or Register Manually</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {error && (
                     <div className="mb-6 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-center tracking-wide">
                         Error: {error}
                     </div>
                 )}
 
-                {/* Form Logic */}
+                {/* Main Form */}
                 <form onSubmit={step === 1 ? handleRequestOTP : registerHandler} className="space-y-5">
                     
                     {step === 1 ? (
-                        /* Step 1 Fields: Details & Avatar */
-                        <>
+                        /* STEP 1: DETAILS & AVATAR */
+                        <div className="animate-in fade-in slide-in-from-left-4 duration-500">
                             <div className="flex justify-center mb-10">
                                 <label className="relative cursor-pointer group">
                                     <div className="w-32 h-32 rounded-[2.5rem] border-2 border-[var(--border)] flex items-center justify-center overflow-hidden bg-[var(--bg-primary)] shadow-2xl group-hover:border-[var(--accent)]/50 transition-all duration-500">
                                         {preview ? (
-                                            <img src={preview} alt="Profile Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                            <img src={preview} alt="Profile" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         ) : (
                                             <User className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors" size={48} />
                                         )}
@@ -129,101 +165,78 @@ export default function Register() {
                                 </label>
                             </div>
 
-                            <div className="space-y-4 text-left">
-                                <div className="relative group">
+                            <div className="space-y-4">
+                                <div className="group">
                                     <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Username</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
                                         <input
-                                            type="text"
-                                            required
-                                            placeholder="Choose a display name"
-                                            value={username}
+                                            type="text" required value={username}
                                             onChange={(e) => setUsername(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                            placeholder="Choose a display name"
+                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="relative group">
+                                <div className="group">
                                     <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Email Address</label>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
                                         <input
-                                            type="email"
-                                            required
-                                            placeholder="Enter your email"
-                                            value={email}
+                                            type="email" required value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                            placeholder="Enter your email"
+                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="relative group">
-                                    <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Password</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="group">
+                                        <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Password</label>
                                         <input
-                                            type="password"
-                                            required
-                                            placeholder="Create a password"
-                                            value={password}
+                                            type="password" required value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                            placeholder="••••••••"
+                                            className="w-full px-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
                                         />
                                     </div>
-                                </div>
-
-                                <div className="relative group">
-                                    <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Confirm Password</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent)]" size={18} />
+                                    <div className="group">
+                                        <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider ml-1 mb-2 block">Confirm</label>
                                         <input
-                                            type="password"
-                                            required
-                                            placeholder="Repeat your password"
-                                            value={confirmPassword}
+                                            type="password" required value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                                            placeholder="••••••••"
+                                            className="w-full px-4 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all"
                                         />
                                     </div>
                                 </div>
                             </div>
-                        </>
+                        </div>
                     ) : (
-                        /* Step 2 Field: OTP Input */
-                        <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex justify-center mb-4">
-                                <div className="p-4 bg-[var(--accent)]/10 rounded-3xl">
-                                    <ShieldCheck className="text-[var(--accent)]" size={40} />
-                                </div>
+                        /* STEP 2: OTP INPUT */
+                        <div className="space-y-6 text-center animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="p-4 bg-[var(--accent)]/10 rounded-3xl inline-block mx-auto">
+                                <ShieldCheck className="text-[var(--accent)]" size={40} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider block">Verification Code</label>
                                 <input
-                                    type="text"
-                                    required
-                                    maxLength="6"
-                                    placeholder="000000"
-                                    value={otp}
+                                    type="text" required maxLength="6" value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
-                                    className="w-full py-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] text-center text-3xl tracking-[0.5em] font-bold focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:tracking-normal placeholder:text-gray-700"
+                                    placeholder="000000"
+                                    className="w-full py-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-main)] text-center text-3xl tracking-[0.5em] font-bold focus:ring-1 focus:ring-[var(--accent)] transition-all"
                                 />
                             </div>
-                            <button 
-                                type="button" 
-                                onClick={() => setStep(1)}
-                                className="text-xs text-[var(--accent)] hover:underline flex items-center justify-center gap-1 mx-auto font-bold"
-                            >
+                            <button type="button" onClick={() => setStep(1)} className="text-xs text-[var(--accent)] hover:underline flex items-center justify-center gap-1 mx-auto font-bold">
                                 <Edit2 size={12} /> Edit Registration Info
                             </button>
                         </div>
                     )}
 
                     <button
-                        type="submit"
-                        disabled={loading}
+                        type="submit" disabled={loading}
                         className="relative w-full py-5 mt-6 rounded-[1.5rem] overflow-hidden group shadow-xl transition-all active:scale-95 disabled:opacity-70"
                     >
                         <div className="absolute inset-0 bg-[var(--accent)] hover:brightness-110 transition-all duration-500"></div>
@@ -240,9 +253,7 @@ export default function Register() {
                 <div className="text-center mt-10">
                     <p className="text-[var(--text-dim)] text-xs font-semibold">
                         Already have an account?{" "}
-                        <a href="/login" className="text-[var(--accent)] hover:underline">
-                            Login here
-                        </a>
+                        <a href="/login" className="text-[var(--accent)] hover:underline">Login here</a>
                     </p>
                 </div>
             </div>

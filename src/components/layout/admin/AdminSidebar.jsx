@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaBook, FaInbox, FaUser, FaPenNib, FaPalette, FaTimes, FaEdit, FaArrowLeft } from "react-icons/fa";
+import { FaHome, FaBook, FaInbox, FaUser, FaPenNib, FaPalette, FaTimes, FaEdit, FaArrowLeft, FaMagnet } from "react-icons/fa";
 import Logo from "./AdminLogo";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { to: '/admin/requests', label: 'REQUESTS', icon: <FaInbox /> },
     { to: '/admin/activity', label: 'ACTIVITY', icon: <FaPenNib /> },
     { to: '/admin/appearance', label: 'APPEARANCE', icon: <FaPalette /> },
+    { to: '/admin/audit', label: 'Audit Logs', icon: <FaMagnet/>},
   ];
 
   // Logic to handle poor readability in light themes:

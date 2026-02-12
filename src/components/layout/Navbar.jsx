@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   FaHome, FaBook, FaSignOutAlt, FaTachometerAlt, FaBars, FaTimes, 
-  FaSearch, FaChevronDown, FaUserCircle, FaBookmark, FaUser, FaShieldAlt, FaCog, FaArrowRight
+  FaSearch, FaChevronDown, FaUserCircle, FaBookmark, FaUser, FaShieldAlt, FaCog, FaArrowRight,
+  FaWallet
 } from "react-icons/fa";
 import { IoLibrary } from "react-icons/io5";
 import Logo from "./Logo";
@@ -204,6 +205,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                         <DropdownItem to="/profile" icon={<FaUserCircle />} label="My Profile" />
                         <DropdownItem to="/library" icon={<FaBookmark />} label="My Library" />
                         <DropdownItem to="/settings" icon={<FaCog />} label="Settings" />
+                        <DropdownItem to="/wallet" icon = {<FaWallet/>} label = "Wallet"/>
                         {user?.role === 'admin' && <DropdownItem to="/admin" icon={<FaShieldAlt />} label="Admin Panel" />}
                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] font-black uppercase mt-1 border-t border-[var(--border)]">
                           <FaSignOutAlt  size={18}/> Log Out

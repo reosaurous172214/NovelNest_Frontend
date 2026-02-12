@@ -11,6 +11,6 @@ export const fetchChapter = async (novelId, chapterno) => {
     return res.data; 
   } catch (error) {
     console.error("Error fetching chapter:", error);
-    return ;
+    throw error;
   }
 };

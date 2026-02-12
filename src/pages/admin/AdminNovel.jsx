@@ -12,6 +12,7 @@ import {
 import { fetchAllNovels, deleteNovel } from "../../api/apiAdmin.js";
 import { useAlert } from "../../context/AlertContext.jsx";
 import NovelDrawer from "../../components/admin/NovelDrawer.jsx";
+import NovelEdit from "../../components/admin/NovelEdit.jsx";
 
 export default function AdminNovels() {
   const [novels, setNovels] = useState([]);
@@ -21,6 +22,9 @@ export default function AdminNovels() {
   // Sidebar Panel State
   const [drawerNovel, setDrawerNovel] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  //Sidebar Panel State for Edit
+  const [editNovel, setEditNovel] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Confirmation Box State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,6 +50,10 @@ export default function AdminNovels() {
   const handleOpenDrawer = (novel) => {
     setDrawerNovel(novel);
     setIsDrawerOpen(true);
+  };
+  const handleOpenEdit = (novel) => {
+    setEditNovel(novel);
+    setIsEditOpen(true);
   };
 
   const confirmDelete = (novel) => {
@@ -188,7 +196,9 @@ export default function AdminNovels() {
                         >
                           <LuExternalLink size={16} />
                         </button>
-                        <button className="p-2 text-[var(--text-dim)] hover:text-blue-500 hover:bg-[var(--bg-primary)] rounded-lg transition-all">
+                        <button 
+                        onClick={() => handleOpenEdit(novel)}
+                        className="p-2 text-[var(--text-dim)] hover:text-blue-500 hover:bg-[var(--bg-primary)] rounded-lg transition-all">
                           <LuFilePenLine size={16} />
                         </button>
                         <button
@@ -219,7 +229,11 @@ export default function AdminNovels() {
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
       />
-
+      <NovelEdit 
+        novel={editNovel} 
+        isOpen={isEditOpen} 
+        onClose={() => setIsEditOpen(false)} 
+      />
       {/* REMOVAL CONFIRMATION BOX */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
