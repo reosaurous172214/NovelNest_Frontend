@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { 
-  Camera, Edit3, Lock, RefreshCw, User, Mail, Globe, 
-  Settings, ShieldCheck, Activity, Save, CheckCircle2, Wallet, ExternalLink 
+  Camera, Edit3, Lock, User, Mail, Globe, 
+  Settings, ShieldCheck, Activity, Save, CheckCircle2, ExternalLink 
 } from "lucide-react";
 import { useAlert } from "../context/AlertContext";
-import { ethers } from "ethers";
 
 export default function Profile() {
   const { showAlert } = useAlert();
@@ -21,8 +20,7 @@ export default function Profile() {
     username: "", bio: "", mobile: "", country: "", state: "", city: "", timezone: "",
     theme: "default", language: "en", matureContent: false, notifications: true,
     showEmail: false, showMobile: false, showLocation: true,
-    currentPassword: "", newPassword: "", confirmPassword: "",
-    walletAddress: "" // Added walletAddress to form state
+    currentPassword: "", newPassword: "", confirmPassword: ""
   });
 
   useEffect(() => {
@@ -50,7 +48,6 @@ export default function Profile() {
           showEmail: data.privacy?.showEmail || false,
           showMobile: data.privacy?.showMobile || false,
           showLocation: data.privacy?.showLocation || true,
-          walletAddress: data.walletAddress || ""
         }));
 
         setPreview(data.profilePicture ? `${process.env.REACT_APP_API_URL}${data.profilePicture}` : null);
@@ -60,35 +57,6 @@ export default function Profile() {
     };
     fetchProfile();
   }, []);
-
-  /* --- BLOCKCHAIN LOGIC --- */
-  const handleConnectWallet = async () => {
-    if (!window.ethereum) {
-      return showAlert("MetaMask not detected. Please install the extension.", "error");
-    }
-
-    try {
-      setLoading(true);
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
-      const connectedAddress = accounts[0].toLowerCase();
-
-      const token = localStorage.getItem("token");
-      const { data } = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/auth/updateProfile`, 
-        { walletAddress: connectedAddress },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setUser(data);
-      setForm(prev => ({ ...prev, walletAddress: data.walletAddress }));
-      showAlert("Royalty node uplinked successfully.", "success");
-    } catch (err) {
-      showAlert("Wallet authentication failed.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -159,60 +127,49 @@ export default function Profile() {
     }
   };
 
-  if (!user) return <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] text-[var(--accent)] font-black uppercase tracking-[0.5em] animate-pulse">Syncing Identity...</div>;
+  if (!user) return <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] text-[var(--accent)] font-semibold uppercase tracking-tight animate-pulse">Loading Profile...</div>;
 
-  const glassStyle = "bg-[var(--bg-secondary)] opacity-95 backdrop-blur-3xl border border-[var(--border)] rounded-[2.5rem]";
+  const glassStyle = "bg-[var(--bg-secondary)] border border-white/10 shadow-lg rounded-[2rem]";
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-24 px-4 md:px-12 transition-colors duration-500 selection:bg-[var(--accent)]/20">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-20 px-4 md:px-12 transition-colors duration-500">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* --- DYNAMIC HEADER --- */}
-        <div className={`${glassStyle} overflow-hidden shadow-2xl relative`}>
-          <div className="absolute inset-0 h-52 overflow-hidden">
-             <img 
-                src={preview || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"} 
-                className="w-full h-full object-cover blur-[80px] opacity-20 scale-125" 
-                alt=""
-             />
-             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-primary)]/40 to-[var(--bg-primary)]"></div>
-          </div>
-
-          <div className="relative p-8 flex flex-col md:flex-row items-center md:items-end gap-8 pt-20">
-            <div className="relative group text-left">
-              <div className="absolute -inset-1 bg-[var(--accent)] rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
+        {/* --- MEDIUM HERO HEADER --- */}
+        <div className={`${glassStyle} overflow-hidden relative`}>
+          <div className="relative p-8 flex flex-col md:flex-row items-center md:items-center gap-8">
+            <div className="relative">
               <img
                 src={preview || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"}
-                className="relative w-44 h-44 rounded-[2.2rem] object-cover border-4 border-[var(--bg-primary)] shadow-2xl"
+                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-[var(--bg-primary)] shadow-md"
                 alt="Profile"
               />
               {edit && (
-                <label className="absolute -bottom-2 -right-2 bg-[var(--accent)] p-3 rounded-2xl cursor-pointer hover:scale-110 transition-all shadow-xl border border-white/20">
-                  <Camera size={20} className="text-white" />
+                <label className="absolute -bottom-2 -right-2 bg-[var(--accent)] p-2.5 rounded-xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-lg">
+                  <Camera size={18} className="text-white" />
                   <input type="file" hidden onChange={handleFileChange} />
                 </label>
               )}
             </div>
 
             <div className="flex-1 text-center md:text-left space-y-2">
-              <h1 className="text-4xl font-black tracking-tighter text-[var(--text-main)] uppercase italic">{user.username}</h1>
-              <p className="text-[var(--text-dim)] max-w-lg italic font-medium">{user.bio || "No biography provided."}</p>
+              <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-main)] uppercase">{user.username}</h1>
+              <p className="text-[var(--text-dim)] max-w-lg font-medium leading-relaxed opacity-90">{user.bio || "No biography provided."}</p>
             </div>
             
-            <div className="hidden md:block text-right pb-2">
-                <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 text-right">Sync Integrity</p>
-                <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-[var(--accent)] shadow-[0_0_15px_var(--accent-glow)]" style={{ width: '88%' }}></div>
+            <div className="hidden md:block text-right">
+                <p className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-2">Account Health</p>
+                <div className="w-40 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-[var(--accent)]" style={{ width: '88%' }}></div>
                 </div>
             </div>
           </div>
 
           {/* --- TAB NAVIGATION --- */}
-          <nav className="flex px-8 mt-6 border-t border-[var(--border)] overflow-x-auto no-scrollbar bg-black/5">
+          <nav className="flex px-8 border-t border-white/5 overflow-x-auto no-scrollbar bg-black/10">
             {[
               {id: "Personal", icon: <User size={14}/>},
               {id: "Contact", icon: <Globe size={14}/>},
-              {id: "Royalty", icon: <Wallet size={14}/>}, // NEW BLOCKCHAIN TAB
               {id: "Preferences", icon: <Settings size={14}/>},
               {id: "Privacy", icon: <ShieldCheck size={14}/>},
               {id: "Stats", icon: <Activity size={14}/>},
@@ -221,12 +178,12 @@ export default function Profile() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-5 text-[11px] font-black uppercase tracking-widest transition-all relative ${
+                className={`flex items-center gap-2 px-6 py-5 text-[10px] font-semibold uppercase tracking-tight transition-all relative whitespace-nowrap ${
                   activeTab === tab.id ? "text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text-main)]"
                 }`}
               >
                 {tab.icon} {tab.id}
-                {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]" />}
+                {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent)]" />}
               </button>
             ))}
           </nav>
@@ -237,154 +194,91 @@ export default function Profile() {
           <div className="lg:col-span-2 space-y-8">
 
             {activeTab === "Personal" && (
-              <TabWrapper title="Personal Data" edit={edit} toggleEdit={() => setEdit(!edit)}>
-                <InputField label="Identity Tag" name="username" value={form.username} onChange={handleChange} edit={edit} />
-                <TextAreaField label="User Biography" name="bio" value={form.bio} onChange={handleChange} edit={edit} />
+              <TabWrapper title="Personal Information" edit={edit} toggleEdit={() => setEdit(!edit)}>
+                <InputField label="Username" name="username" value={form.username} onChange={handleChange} edit={edit} />
+                <TextAreaField label="Biography" name="bio" value={form.bio} onChange={handleChange} edit={edit} />
                 {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
               </TabWrapper>
             )}
 
-            {/* NEW ROYALTY UPLINK TAB CONTENT */}
-            {activeTab === "Royalty" && (
-              <TabWrapper title="Royalty Uplink Protocol">
-                <div className="space-y-6">
-                  <div className="p-8 bg-[var(--bg-primary)] border border-[var(--border)] rounded-[2rem] relative overflow-hidden group">
-                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--accent)] blur-[100px] opacity-10"></div>
-                    
-                    <div className="relative z-10 space-y-6">
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck className="text-[var(--accent)]" size={24} />
-                        <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-[0.2em]">
-                          Blockchain Identity: {user.walletAddress ? "Linked" : "Disconnected"}
-                        </h4>
-                      </div>
-
-                      {user.walletAddress ? (
-                        <div className="space-y-4">
-                          <p className="text-[11px] text-[var(--text-dim)] italic leading-relaxed">
-                            Your identity is securely linked to the cryptographic node below. 
-                            Royalties (70%) are automatically routed to this address upon chapter purchase.
-                          </p>
-                          <div className="flex items-center justify-between gap-4 bg-black/40 p-5 rounded-2xl border border-white/5">
-                            <code className="text-[10px] font-mono text-[var(--accent)] break-all">{user.walletAddress}</code>
-                            <a href={`https://sepolia.etherscan.io/address/${user.walletAddress}`} target="_blank" rel="noreferrer">
-                                <ExternalLink size={14} className="text-[var(--text-dim)] hover:text-[var(--accent)] transition-all"/>
-                            </a>
-                          </div>
-                          <button onClick={() => setEdit(true)} className="text-[9px] font-black uppercase text-[var(--accent)] tracking-widest hover:underline">Request Node Migration</button>
-                        </div>
-                      ) : (
-                        <div className="space-y-6 text-left">
-                          <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-                            To activate author royalties, you must uplink a Sepolia-compatible wallet. 
-                            Readers pay in ETH, and our smart contract instantly splits the treasury: 70% to you, 30% to the platform.
-                          </p>
-                          <button 
-                            onClick={handleConnectWallet}
-                            disabled={loading}
-                            className="w-full bg-[var(--accent)] hover:brightness-110 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all shadow-xl shadow-[var(--accent-glow)]"
-                          >
-                            <Wallet size={16}/> {loading ? "Authenticating..." : "Establish MetaMask Uplink"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] text-left">
-                      <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">Treasury Split</p>
-                      <p className="text-2xl font-black italic text-[var(--text-main)]">70% <span className="text-[10px] font-normal text-[var(--text-dim)]">Author</span></p>
-                    </div>
-                    <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] text-left">
-                      <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">Current Earnings</p>
-                      <p className="text-2xl font-black italic text-[var(--accent)]">{user.readingStats?.totalEarnings || "0.00"} <span className="text-[10px] font-normal text-[var(--text-dim)]">ETH</span></p>
-                    </div>
-                  </div>
-                </div>
-              </TabWrapper>
-            )}
-
             {activeTab === "Contact" && (
-              <TabWrapper title="Uplink Information" edit={edit} toggleEdit={() => setEdit(!edit)}>
+              <TabWrapper title="Contact Details" edit={edit} toggleEdit={() => setEdit(!edit)}>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <InputField label="Secure Email" value={user.email} edit={false} />
-                  <InputField label="Mobile Comm" name="mobile" value={form.mobile} onChange={handleChange} edit={edit} />
-                  <InputField label="Country Sector" name="country" value={form.country} onChange={handleChange} edit={edit} />
-                  <InputField label="Temporal Zone" name="timezone" value={form.timezone} onChange={handleChange} edit={edit} />
+                  <InputField label="Email Address" value={user.email} edit={false} />
+                  <InputField label="Mobile Number" name="mobile" value={form.mobile} onChange={handleChange} edit={edit} />
+                  <InputField label="Country" name="country" value={form.country} onChange={handleChange} edit={edit} />
+                  <InputField label="Timezone" name="timezone" value={form.timezone} onChange={handleChange} edit={edit} />
                 </div>
                 {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
               </TabWrapper>
             )}
 
             {activeTab === "Preferences" && (
-              <TabWrapper title="System Interface" edit={edit} toggleEdit={() => setEdit(!edit)}>
+              <TabWrapper title="Interface Settings" edit={edit} toggleEdit={() => setEdit(!edit)}>
                 <div className="grid md:grid-cols-2 gap-6">
-                    <SelectField label="Visual Theme" name="theme" value={form.theme} onChange={handleChange} edit={edit} options={["default","cyberpunk","emerald"]}/>
-                    <SelectField label="Interface Language" name="language" value={form.language} onChange={handleChange} edit={edit} options={["en","es","fr","jp"]}/>
+                    <SelectField label="Theme" name="theme" value={form.theme} onChange={handleChange} edit={edit} options={["default","cyberpunk","emerald"]}/>
+                    <SelectField label="Language" name="language" value={form.language} onChange={handleChange} edit={edit} options={["en","es","fr","jp"]}/>
                 </div>
-                <div className="flex flex-col gap-5 mt-4">
-                    <CheckboxField label="Enable Mature Data Extraction" name="matureContent" checked={form.matureContent} onChange={handleChange} edit={edit}/>
-                    <CheckboxField label="Enable Push Notifications" name="notifications" checked={form.notifications} onChange={handleChange} edit={edit}/>
+                <div className="flex flex-col gap-4 mt-4">
+                    <CheckboxField label="Show Mature Content" name="matureContent" checked={form.matureContent} onChange={handleChange} edit={edit}/>
+                    <CheckboxField label="Enable Notifications" name="notifications" checked={form.notifications} onChange={handleChange} edit={edit}/>
                 </div>
                 {edit && <SaveButton loading={loading} onClick={handleSaveProfile} />}
               </TabWrapper>
             )}
 
             {activeTab === "Privacy" && (
-              <TabWrapper title="Privacy Protocols">
+              <TabWrapper title="Privacy Controls">
                 <div className="space-y-6">
-                    <CheckboxField label="Broadcast Email Publicly" name="showEmail" checked={form.showEmail} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showEmail")}}/>
-                    <CheckboxField label="Broadcast Mobile Number" name="showMobile" checked={form.showMobile} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showMobile")}}/>
-                    <CheckboxField label="Expose Location Metadata" name="showLocation" checked={form.showLocation} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showLocation")}}/>
+                    <CheckboxField label="Public Email" name="showEmail" checked={form.showEmail} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showEmail")}}/>
+                    <CheckboxField label="Public Mobile" name="showMobile" checked={form.showMobile} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showMobile")}}/>
+                    <CheckboxField label="Public Location" name="showLocation" checked={form.showLocation} onChange={(e)=>{handleChange(e); handlePrivacyUpdate("showLocation")}}/>
                 </div>
               </TabWrapper>
             )}
 
             {activeTab === "Stats" && (
-              <TabWrapper title="Activity Metrics">
+              <TabWrapper title="User Statistics">
                 <div className="space-y-8">
-                    <DataBar label="Knowledge Base Extracted" value={user.readingStats?.totalNovelsRead || 12} max={100} color="bg-[var(--accent)]" />
-                    <DataBar label="Contribution Level" value={65} max={100} color="bg-indigo-500" />
-                    <div className="pt-4 border-t border-[var(--border)]">
-                        <DataRow label="Last Uplink" value={new Date(user.readingStats?.lastActiveAt).toLocaleDateString()}/>
-                        <DataRow label="Account Created" value={new Date(user.createdAt).toLocaleDateString()}/>
+                    <DataBar label="Novels Read" value={user.readingStats?.totalNovelsRead || 12} max={100} color="bg-[var(--accent)]" />
+                    <DataBar label="Activity Level" value={65} max={100} color="bg-blue-500" />
+                    <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-6">
+                        <DataRow label="Last Active" value={new Date(user.readingStats?.lastActiveAt).toLocaleDateString()}/>
+                        <DataRow label="Member Since" value={new Date(user.createdAt).toLocaleDateString()}/>
                     </div>
                 </div>
               </TabWrapper>
             )}
 
             {activeTab === "Password" && (
-              <TabWrapper title="Security Override">
+              <TabWrapper title="Security">
                 <div className="space-y-6">
-                    <InputField label="Current Key" type="password" name="currentPassword" value={form.currentPassword} onChange={handleChange} />
-                    <InputField label="New Security Key" type="password" name="newPassword" value={form.newPassword} onChange={handleChange} />
-                    <InputField label="Verify New Key" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
-                    <button onClick={handleChangePassword} className="w-full bg-red-500/10 border border-red-500/20 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3">
-                        <Lock size={14}/> Rewrite Security Key
+                    <InputField label="Current Password" type="password" name="currentPassword" value={form.currentPassword} onChange={handleChange} />
+                    <InputField label="New Password" type="password" name="newPassword" value={form.newPassword} onChange={handleChange} />
+                    <InputField label="Confirm New Password" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
+                    <button onClick={handleChangePassword} className="w-full bg-red-500/10 border border-red-500/20 py-4 rounded-xl font-semibold text-[11px] uppercase tracking-tight text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2">
+                        <Lock size={14}/> Update Password
                     </button>
                 </div>
               </TabWrapper>
             )}
-
           </div>
 
           {/* SIDEBAR */}
-          <div className="space-y-6">
-             <div className={`${glassStyle} p-8 space-y-8 text-left`}>
-                <h4 className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.4em]">Node Status</h4>
-                <div className="flex items-center gap-4 p-5 bg-[var(--bg-primary)] rounded-[1.5rem] border border-[var(--border)]">
+          <div className="space-y-8">
+             <div className={`${glassStyle} p-8 space-y-6 text-left`}>
+                <h4 className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider">Status</h4>
+                <div className="flex items-center gap-4 p-4 bg-[var(--bg-primary)] rounded-xl border border-white/5">
                     <CheckCircle2 className="text-[var(--accent)]" size={24} />
                     <div>
-                        <p className="text-xs font-black text-[var(--text-main)] uppercase tracking-tight">Verified Entity</p>
-                        <p className="text-[9px] text-[var(--text-dim)] uppercase font-mono tracking-widest mt-1">Trust Status: Optimal</p>
+                        <p className="text-sm font-semibold text-[var(--text-main)] uppercase tracking-tight">Verified</p>
+                        <p className="text-[9px] text-[var(--text-dim)] uppercase tracking-wider opacity-60">Status: Active</p>
                     </div>
                 </div>
-                <div className="space-y-5 pt-6 border-t border-[var(--border)]">
-                    <DataRow label="Data Integrity" value="Stable" />
-                    <DataRow label="Archive Sector" value={form.country || "GLOBAL"} />
+                <div className="space-y-4 pt-6 border-t border-white/5">
+                    <DataRow label="Integrity" value="Stable" />
+                    <DataRow label="Region" value={form.country || "GLOBAL"} />
                     <DataRow label="Role" value={user.role || "Reader"} />
-                    <DataRow label="Web3 Uplink" value={user.walletAddress ? "Enabled" : "Disabled"} />
                 </div>
              </div>
           </div>
@@ -394,15 +288,15 @@ export default function Profile() {
   );
 }
 
-/* ---------------- UI SUB-COMPONENTS (Dynamic) ---------------- */
+/* ---------------- SUB-COMPONENTS ---------------- */
 
 const TabWrapper = ({ title, children, edit, toggleEdit }) => (
-  <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2.5rem] p-10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 text-left relative overflow-hidden">
-    <div className="flex justify-between items-center mb-10">
-      <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-dim)]">{title}</h3>
+  <div className="bg-[var(--bg-secondary)] border border-white/5 rounded-[2rem] p-8 shadow-md text-left relative overflow-hidden">
+    <div className="flex justify-between items-center mb-8">
+      <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] opacity-70">{title}</h3>
       {toggleEdit && (
-        <button onClick={toggleEdit} className="p-3 bg-[var(--bg-primary)] rounded-2xl hover:border-[var(--accent)] transition-all border border-[var(--border)] group">
-          <Edit3 size={18} className={edit ? "text-[var(--accent)]" : "text-[var(--text-dim)] group-hover:text-[var(--text-main)]"} />
+        <button onClick={toggleEdit} className="p-2.5 bg-[var(--bg-primary)] rounded-xl hover:border-[var(--accent)]/50 transition-all border border-white/5">
+          <Edit3 size={16} className={edit ? "text-[var(--accent)]" : "text-[var(--text-dim)]"} />
         </button>
       )}
     </div>
@@ -411,53 +305,56 @@ const TabWrapper = ({ title, children, edit, toggleEdit }) => (
 );
 
 const InputField = ({ label, edit=true, ...props }) => (
-  <div className="space-y-3 text-left">
-    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
-    <input {...props} disabled={!edit} className={`w-full px-6 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}/>
+  <div className="space-y-2 text-left">
+    <label className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-tight ml-1">{label}</label>
+    <input {...props} disabled={!edit} className={`w-full px-5 py-3.5 rounded-xl bg-[var(--bg-primary)] border border-white/5 text-[14px] text-[var(--text-main)] focus:border-[var(--accent)]/40 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-white/10"}`}/>
   </div>
 );
 
 const TextAreaField = ({ label, edit=true, ...props }) => (
-  <div className="space-y-3 text-left">
-    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
-    <textarea {...props} disabled={!edit} rows="4" className={`w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-[2rem] p-6 text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}/>
+  <div className="space-y-2 text-left">
+    <label className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-tight ml-1">{label}</label>
+    <textarea {...props} disabled={!edit} rows="4" className={`w-full bg-[var(--bg-primary)] border border-white/5 rounded-xl p-5 text-[14px] leading-relaxed text-[var(--text-main)] focus:border-[var(--accent)]/40 outline-none transition-all ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-white/10"}`}/>
   </div>
 );
 
 const SelectField = ({ label, options, edit=true, ...props }) => (
-  <div className="space-y-3 text-left">
-    <label className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest ml-1">{label}</label>
-    <select {...props} disabled={!edit} className={`w-full px-6 py-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-main)] focus:border-[var(--accent)]/50 outline-none transition-all uppercase font-bold tracking-tight ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-dim)]"}`}>
+  <div className="space-y-2 text-left">
+    <label className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-tight ml-1">{label}</label>
+    <select {...props} disabled={!edit} className={`w-full px-5 py-3.5 rounded-xl bg-[var(--bg-primary)] border border-white/5 text-[13px] text-[var(--text-main)] focus:border-[var(--accent)]/40 outline-none transition-all uppercase font-semibold tracking-tight appearance-none ${!edit ? "opacity-40 cursor-not-allowed" : "hover:border-white/10"}`}>
       {options.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)]">{opt.toUpperCase()}</option>)}
     </select>
   </div>
 );
 
 const CheckboxField = ({ label, edit=true, ...props }) => (
-  <label className="flex items-center gap-4 cursor-pointer select-none group">
-    <input type="checkbox" disabled={!edit} {...props} className="w-5 h-5 accent-[var(--accent)] rounded-lg cursor-pointer"/>
-    <span className={`text-xs font-black uppercase tracking-widest ${!edit ? "opacity-40" : "text-[var(--text-dim)] group-hover:text-[var(--text-main)]"}`}>{label}</span>
+  <label className="flex items-center gap-4 cursor-pointer select-none w-fit">
+    <input type="checkbox" disabled={!edit} {...props} className="w-5 h-5 rounded bg-[var(--bg-primary)] border-white/10 accent-[var(--accent)] transition-all cursor-pointer"/>
+    <span className={`text-[11px] font-semibold uppercase tracking-tight ${!edit ? "opacity-40" : "text-[var(--text-dim)]"}`}>{label}</span>
   </label>
 );
 
 const SaveButton = ({ loading, onClick }) => (
-  <button onClick={onClick} disabled={loading} className="w-full bg-[var(--accent)] hover:brightness-110 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all shadow-xl shadow-[var(--accent-glow)]">
-    <Save size={16}/>{loading ? "Synchronizing..." : "Overwrite Identity Data"}
+  <button onClick={onClick} disabled={loading} className="w-full bg-[var(--accent)] hover:brightness-110 active:scale-[0.98] text-white font-semibold text-[11px] uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md">
+    <Save size={16}/>{loading ? "Saving..." : "Update Profile"}
   </button>
 );
 
 const DataBar = ({ label, value, max=100, color }) => (
   <div className="space-y-3 text-left">
-    <p className="text-[10px] font-black uppercase text-[var(--text-dim)] tracking-[0.2em]">{label}</p>
-    <div className="w-full bg-[var(--bg-primary)] rounded-full h-3 border border-[var(--border)]">
-      <div style={{ width: `${(value/max)*100}%` }} className={`h-full rounded-full ${color} shadow-[0_0_15px_var(--accent-glow)] transition-all duration-1000`}></div>
+    <div className="flex justify-between items-end">
+        <p className="text-[10px] font-semibold uppercase text-[var(--text-dim)] tracking-tight">{label}</p>
+        <p className="text-[10px] font-semibold text-[var(--text-main)]">{Math.round((value/max)*100)}%</p>
+    </div>
+    <div className="w-full bg-white/5 rounded-full h-[5px]">
+      <div style={{ width: `${(value/max)*100}%` }} className={`h-full rounded-full ${color} transition-all duration-1000 ease-out`}></div>
     </div>
   </div>
 );
 
 const DataRow = ({ label, value }) => (
-  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-3">
-    <span className="text-[var(--text-dim)]">{label}</span>
+  <div className="flex justify-between items-center text-[11px] font-semibold uppercase tracking-tight py-1">
+    <span className="text-[var(--text-dim)] opacity-60">{label}</span>
     <span className="text-[var(--text-main)]">{value}</span>
   </div>
 );

@@ -14,8 +14,8 @@ import {
   FaShieldAlt,
   FaChevronDown,
   FaBookmark,
-  FaLock,        // Added Lock
-  FaUnlock,      // Added Unlock
+  FaLock,
+  FaUnlock,
 } from "react-icons/fa";
 import { useAddFavourites } from "../../hooks/useFavourites";
 import { useAddBookmark } from "../../hooks/useBookmarks"; 
@@ -24,8 +24,7 @@ import { useAlert } from "../../context/AlertContext";
 import { useAuth } from "../../context/AuthContext";
 
 const CHAPTERS_PER_PAGE = 50;
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000&auto=format&fit=crop";
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000&auto=format&fit=crop";
 
 const NovelDetail = () => {
   const { id } = useParams();
@@ -47,10 +46,7 @@ const NovelDetail = () => {
   const totalChapters = chapters.length;
   const totalPages = Math.ceil(totalChapters / CHAPTERS_PER_PAGE);
   const startIdx = (tocPage - 1) * CHAPTERS_PER_PAGE;
-  const visibleChapters = chapters.slice(
-    startIdx,
-    startIdx + CHAPTERS_PER_PAGE,
-  );
+  const visibleChapters = chapters.slice(startIdx, startIdx + CHAPTERS_PER_PAGE);
 
   useEffect(() => {
     const fetchNovel = async () => {
@@ -82,37 +78,33 @@ const NovelDetail = () => {
   if (!novel) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
       <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="font-sans text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold animate-pulse">Synchronizing Registry...</p>
+      <p className="text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold animate-pulse">Syncing Registry...</p>
     </div>
   );
 
   const handleFavourite = async () => {
-    if (!token) return showAlert("Please log in first.", "info");
+    if (!token) return showAlert("Log in required.", "info");
     try {
       const response = await addToFavourites(id);
-      showAlert(`"${novel.title}" ${response?.message || "Added to Favourites"}`, "success");
+      showAlert(`"${novel.title}" ${response?.message || "Added"}`, "success");
       setShowSaveMenu(false);
-    } catch (err) {
-      showAlert("Action failed.", "error");
-    }
+    } catch (err) { showAlert("Action failed.", "error"); }
   };
 
   const handleBookmark = async () => {
-    if (!token) return showAlert("Please log in first.", "info");
+    if (!token) return showAlert("Log in required.", "info");
     try {
       const response = await addToBookmark(id);
       showAlert(`"${novel.title}" ${response?.message || "Bookmarked"}`, "success");
       setShowSaveMenu(false);
-    } catch (err) {
-      showAlert("Action failed.", "error");
-    }
+    } catch (err) { showAlert("Action failed.", "error"); }
   };
 
-  const balancedRounded = "rounded-2xl"; 
-  const glassStyle = `bg-[var(--bg-secondary)] border border-[var(--border)] shadow-xl ${balancedRounded} transition-colors`;
+  const balancedRounded = "rounded-xl"; 
+  const glassStyle = `bg-[var(--bg-secondary)] border border-[var(--border)] shadow-xl ${balancedRounded}`;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-28 relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-28 relative overflow-hidden transition-colors">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[var(--accent)] opacity-5 blur-[120px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-6 relative z-10">
@@ -121,18 +113,16 @@ const NovelDetail = () => {
         <div className={`relative p-6 md:p-10 ${glassStyle}`}>
           <div className="flex flex-col md:flex-row gap-10">
             <div className="mx-auto md:mx-0 shrink-0">
-              <div className="relative group">
-                <img
-                  src={novel.coverImage}
-                  onError={(e) => (e.target.src = FALLBACK_IMAGE)}
-                  alt={novel.title}
-                  className={`w-56 h-80 object-cover ${balancedRounded} shadow-lg border border-[var(--border)] transition-transform duration-500 group-hover:scale-[1.01]`}
-                />
-              </div>
+              <img
+                src={novel.coverImage}
+                onError={(e) => (e.target.src = FALLBACK_IMAGE)}
+                alt={novel.title}
+                className={`w-56 h-80 object-cover ${balancedRounded} shadow-lg border border-[var(--border)]`}
+              />
             </div>
 
             <div className="flex-1 text-left">
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase italic leading-[1.1] text-[var(--text-main)] mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight uppercase leading-[1.1] text-[var(--text-main)] mb-4">
                 {novel.title}
               </h1>
 
@@ -150,7 +140,7 @@ const NovelDetail = () => {
 
               <div className="flex flex-wrap gap-2 mb-10">
                 {novel.genres?.map((g, i) => (
-                  <span key={i} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-default ${balancedRounded}`}>
+                  <span key={i} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-dim)] ${balancedRounded}`}>
                     {g}
                   </span>
                 ))}
@@ -159,7 +149,7 @@ const NovelDetail = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   to={`/novel/${id}/chapter/${chapters[chapters.length - 1]?.chapterNumber || 1}`}
-                  className={`bg-[var(--accent)] px-8 py-4 ${balancedRounded} font-black text-white text-[11px] uppercase tracking-widest shadow-md flex items-center justify-center gap-3 hover:brightness-110 active:scale-95 transition-all`}
+                  className={`bg-[var(--accent)] px-8 py-4 ${balancedRounded} font-bold text-white text-[11px] uppercase tracking-widest shadow-md flex items-center justify-center gap-3 hover:brightness-110 active:scale-95 transition-all`}
                 >
                   <FaPlay size={10} /> Start Reading
                 </Link>
@@ -167,25 +157,17 @@ const NovelDetail = () => {
                 <div className="relative" ref={saveMenuRef}>
                   <button
                     onClick={() => setShowSaveMenu(!showSaveMenu)}
-                    className={`h-full px-8 py-4 ${balancedRounded} font-black text-[var(--text-main)] border border-[var(--border)] flex items-center justify-center gap-3 hover:bg-[var(--accent)]/10 transition-all text-[11px] uppercase tracking-widest bg-[var(--bg-primary)]`}
+                    className={`h-full px-8 py-4 ${balancedRounded} font-bold text-[var(--text-main)] border border-[var(--border)] flex items-center justify-center gap-3 hover:bg-[var(--accent)]/10 transition-all text-[11px] uppercase tracking-widest bg-[var(--bg-primary)]`}
                   >
-                    Save Story <FaChevronDown size={10} className={`transition-transform ${showSaveMenu ? 'rotate-180' : ''}`} />
+                    Save to library <FaChevronDown size={10} className={`transition-transform ${showSaveMenu ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showSaveMenu && (
                     <div className={`absolute top-full left-0 mt-2 w-full min-w-[180px] bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl z-50 overflow-hidden ${balancedRounded}`}>
-                      <button
-                        onClick={handleFavourite}
-                        disabled={favAdding}
-                        className="w-full px-5 py-4 text-left text-[11px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/10 flex items-center gap-3 text-[var(--text-main)] border-b border-[var(--border)]"
-                      >
+                      <button onClick={handleFavourite} disabled={favAdding} className="w-full px-5 py-4 text-left text-[11px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/10 flex items-center gap-3 text-[var(--text-main)] border-b border-[var(--border)]">
                         <FaHeart className="text-red-500" /> Favorites
                       </button>
-                      <button
-                        onClick={handleBookmark}
-                        disabled={bookAdding}
-                        className="w-full px-5 py-4 text-left text-[11px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/10 flex items-center gap-3 text-[var(--text-main)]"
-                      >
+                      <button onClick={handleBookmark} disabled={bookAdding} className="w-full px-5 py-4 text-left text-[11px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/10 flex items-center gap-3 text-[var(--text-main)]">
                         <FaBookmark className="text-[var(--accent)]" /> Bookmarks
                       </button>
                     </div>
@@ -199,16 +181,11 @@ const NovelDetail = () => {
         {/* CONTENT TABS */}
         <div className={`mt-10 overflow-hidden ${glassStyle}`}>
           <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[var(--border)] bg-[var(--bg-primary)]/50">
-            {[
-              { id: "about", label: "Description" },
-              { id: "toc", label: "Chapters" },
-              { id: "reviews", label: "Reviews" },
-              { id: "recommend", label: "Recommended" },
-            ].map((tab) => (
+            {[{ id: "about", label: "Description" }, { id: "toc", label: "Chapters" }, { id: "reviews", label: "Reviews" }, { id: "recommend", label: "Recommended" }].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-5 text-[14px] font-medium uppercase transition-all relative
+                className={`py-5 text-[14px] font-bold uppercase transition-all relative
                   ${activeTab === tab.id ? "text-[var(--accent)] bg-[var(--bg-secondary)]" : "text-[var(--text-dim)] hover:text-[var(--text-main)]"}
                 `}
               >
@@ -221,14 +198,14 @@ const NovelDetail = () => {
           <div className="p-8 text-left">
             {activeTab === "about" && (
               <div className="animate-in fade-in duration-500">
-                <h2 className="text-lg font-black uppercase tracking-tighter mb-4 text-[var(--text-main)] flex items-center gap-2">
-                  <div className="w-2 h-2 bg-[var(--accent)]"></div> The Summary
+                <h2 className="text-sm font-bold uppercase tracking-widest mb-4 text-[var(--text-main)] flex items-center gap-2">
+                  Summary
                 </h2>
-                <p className="text-[var(--text-dim)] leading-relaxed text-base font-medium italic opacity-90">
+                <p className="text-[var(--text-dim)] leading-relaxed text-base font-medium opacity-90">
                   {expanded ? novel.description : (novel.description?.slice(0, 280) + (novel.description?.length > 280 ? "..." : ""))}
                 </p>
                 {novel.description?.length > 280 && (
-                  <button onClick={() => setExpanded(!expanded)} className="mt-4 text-[var(--accent)] font-bold text-[9px] uppercase tracking-widest hover:underline transition-all">
+                  <button onClick={() => setExpanded(!expanded)} className="mt-4 text-[var(--accent)] font-bold text-[9px] uppercase tracking-widest">
                     {expanded ? "[ READ LESS ]" : "[ READ MORE ]"}
                   </button>
                 )}
@@ -240,7 +217,7 @@ const NovelDetail = () => {
                 {totalPages > 1 && (
                   <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-2">
                     {Array.from({ length: totalPages }).map((_, i) => (
-                      <button key={i} onClick={() => setTocPage(i + 1)} className={`shrink-0 px-4 py-2 text-[9px] font-bold uppercase border ${balancedRounded} transition-all ${tocPage === i + 1 ? "bg-[var(--text-main)] border-[var(--text-main)] text-[var(--bg-primary)] shadow-md" : "bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--text-main)]"}`}>
+                      <button key={i} onClick={() => setTocPage(i + 1)} className={`shrink-0 px-4 py-2 text-[9px] font-bold uppercase border ${balancedRounded} transition-all ${tocPage === i + 1 ? "bg-[var(--text-main)] border-[var(--text-main)] text-[var(--bg-primary)] shadow-md" : "bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-dim)]"}`}>
                         Page {i + 1}
                       </button>
                     ))}
@@ -248,26 +225,19 @@ const NovelDetail = () => {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-20 gap-y-3">
                   {visibleChapters.map((ch) => {
-                    // Lock Check Logic
                     const isUnlocked = user?.unlockedChapters?.some(id => id.toString() === ch._id.toString());
-                    const isFree = ch.chapterNumber <= (novel.freeChapters || 10); // Fallback to 5 if not defined
+                    const isFree = ch.chapterNumber <= (novel.freeChapters || 10);
 
                     return (
-                      <Link key={ch._id} to={`/novel/${id}/chapter/${ch.chapterNumber}`} className={`group flex items-center p-4 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition-all ${balancedRounded} shadow-sm`}>
-                        <span className={`w-10 h-10 flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--accent)] text-[10px] font-black group-hover:bg-[var(--accent)] group-hover:text-white transition-all ${balancedRounded}`}>
+                      <Link key={ch._id} to={`/novel/${id}/chapter/${ch.chapterNumber}`} className={`group flex items-center p-4 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--accent)] transition-all ${balancedRounded}`}>
+                        <span className={`w-10 h-10 flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--accent)] text-[10px] font-bold group-hover:bg-[var(--accent)] group-hover:text-white transition-all ${balancedRounded}`}>
                           {ch.chapterNumber}
                         </span>
                         <div className="ml-4 flex-1 min-w-0 flex items-center justify-between">
                           <span className="block text-[11px] font-bold text-[var(--text-main)] truncate uppercase">{ch.title}</span>
-                          
-                          {/* ICON LOGIC */}
                           {!isFree && (
                             <div className="ml-2">
-                              {isUnlocked ? (
-                                <FaUnlock size={10} className="text-emerald-500 opacity-60" />
-                              ) : (
-                                <FaLock size={10} className="text-[var(--text-dim)] group-hover:text-[var(--accent)]" />
-                              )}
+                              {isUnlocked ? <FaUnlock size={10} className="text-emerald-500 opacity-60" /> : <FaLock size={10} className="text-[var(--text-dim)]" />}
                             </div>
                           )}
                         </div>
@@ -296,7 +266,7 @@ const NovelDetail = () => {
         {/* DETAILS GRID */}
         <div className="mt-10 text-left">
           <div className={`p-4 ${glassStyle}`}>
-            <h2 className="text-lg font-black uppercase tracking-tighter mb-8 text-[var(--text-main)] flex items-center gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest mb-8 text-[var(--text-main)] flex items-center gap-3">
               <FaShieldAlt className="text-[var(--accent)]" size={16} /> Story Details
             </h2>
             <NovelDetailMap novel={novel} />
@@ -316,10 +286,7 @@ const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
   }, [currentRating]);
 
   const handleRate = async (score) => {
-    if (!token) {
-      showAlert("Please log in to rate.", "info");
-      return;
-    }
+    if (!token) return showAlert("Log in to rate.", "info");
     try {
       setSelected(score);
       const res = await axios.post(
@@ -328,9 +295,7 @@ const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       showAlert(`Feedback Recorded: ${res.data.averageRating} stars`, "success");
-    } catch (err) {
-      showAlert("Rating update failed.", "error");
-    }
+    } catch (err) { showAlert("Rating failed.", "error"); }
   };
 
   return (
@@ -338,11 +303,11 @@ const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button key={star} onMouseEnter={() => setHover(star)} onMouseLeave={() => setHover(0)} onClick={() => handleRate(star)} className="transition-transform active:scale-90">
-            <FaStar size={20} className={`transition-colors duration-200 ${(hover || selected) >= star ? "text-yellow-500" : "text-[var(--border)]"}`} />
+            <FaStar size={20} className={`transition-colors ${(hover || selected) >= star ? "text-yellow-500" : "text-[var(--border)]"}`} />
           </button>
         ))}
       </div>
-      <span className="ml-4 font-black text-xs text-[var(--text-main)] tracking-widest">{hover || selected || "0"}.0</span>
+      <span className="ml-4 font-bold text-xs text-[var(--text-main)] tracking-widest">{hover || selected || "0"}.0</span>
     </div>
   );
 };
@@ -353,7 +318,7 @@ const StatBox = ({ label, value, icon, radius, color = "text-[var(--text-main)]"
       {icon}
       <p className="text-[10px] uppercase font-bold tracking-widest">{label}</p>
     </div>
-    <p className={`text-[18px] font-black uppercase tracking-tight ${color}`}>{value}</p>
+    <p className={`text-[18px] font-bold uppercase tracking-tight ${color}`}>{value}</p>
   </div>
 );
 

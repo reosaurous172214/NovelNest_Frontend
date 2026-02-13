@@ -1,71 +1,91 @@
-import React from 'react';
+import React from "react";
 
 const NovelHubLogo = () => {
   return (
-    <svg 
-      viewBox="0 0 320 80" 
-      fill="none" 
+    <svg
+      viewBox="0 0 340 90"
       xmlns="http://www.w3.org/2000/svg"
-      className="h-10 md:h-14 w-auto transition-all duration-500"
+      className=" h-12 md:h-16 w-auto transition-all duration-500"
       style={{
-        // Uses the dynamic glow variable from your CSS
-        filter: `drop-shadow(0 0 12px var(--accent-glow))`
+        filter: "drop-shadow(0 4px 18px var(--accent-glow))",
+        shapeRendering: "geometricPrecision",
+        textRendering: "optimizeLegibility"
       }}
     >
       <defs>
-        {/* Frosted Glass Filter */}
-        <filter id="glassEffect" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        {/* Softer glass blur */}
+        <filter id="glassEffect" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="3" />
         </filter>
-        
-        {/* Glass Background - Adapts to current theme background */}
+
+        {/* 🔥 FIXED: theme-consistent glass (no currentColor anymore) */}
         <linearGradient id="glassFill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
+          <stop offset="0%" stopColor="var(--bg-secondary)" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="var(--bg-secondary)" stopOpacity="0.55" />
         </linearGradient>
       </defs>
 
-      {/* 1. Glass Icon Base - Dimensions unchanged, border color is dynamic */}
-      <rect 
-        x="5" y="10" width="60" height="60" rx="14" 
-        fill="url(#glassFill)" 
-        stroke="var(--border)" 
-        strokeWidth="1.5"
+      {/* ===== ICON CONTAINER ===== */}
+      <rect
+        x="6"
+        y="12"
+        width="64"
+        height="64"
+        rx="18"
+        fill="url(#glassFill)"
+        stroke="var(--border)"
+        strokeWidth="1.4"
         filter="url(#glassEffect)"
       />
 
-      {/* 2. Book Icon - Now uses the theme's ACCENT color */}
-      <path 
-        d="M20 25C20 22 24 20 35 20C46 20 50 22 50 25V55C50 58 46 60 35 60C24 60 20 58 20 55V25Z" 
-        stroke="var(--accent)" 
-        strokeWidth="4" 
+      {/* ===== BOOK ICON ===== */}
+      <path
+        d="M24 30C24 26 28 24 38 24C48 24 52 26 52 30V58C52 62 48 64 38 64C28 64 24 62 24 58V30Z"
+        stroke="var(--accent)"
+        strokeWidth="3.5"
         strokeLinejoin="round"
       />
-      <path d="M35 20V60" stroke="var(--accent)" strokeWidth="2.5" opacity="0.4"/>
-      <path d="M28 35L35 30L42 35" stroke="var(--text-main)" strokeWidth="2.5" strokeLinecap="round"/>
 
-      {/* 3. TYPOGRAPHY - NOVEL stays main color, NEST takes the accent color */}
-      <text 
-        x="75" y="55" 
-        fontFamily="Arial Black, Gadget, sans-serif" 
-        fontWeight="900" 
-        fontSize="42" 
+      <path
+        d="M38 24V64"
+        stroke="var(--accent)"
+        strokeWidth="2"
+        opacity="0.35"
+      />
+
+      <path
+        d="M31 40L38 34L45 40"
+        stroke="var(--text-main)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+
+      {/* ===== BRAND TEXT ===== */}
+      <text
+        x="82"
+        y="56"
+        fontFamily="Inter, system-ui, -apple-system, sans-serif"
+        fontWeight="800"
+        fontSize="39"
         fill="var(--text-main)"
-        letterSpacing="-2"
+        letterSpacing="-1"
       >
-        Novel<tspan fill="var(--accent)">Nest</tspan>
+        Novel
+        <tspan fill="var(--accent)" fontWeight="900">
+          Nest
+        </tspan>
       </text>
 
-      {/* 4. Tagline - Uses the dimmed text variable for better hierarchy */}
-      <text 
-        x="78" y="72" 
-        fontFamily="Verdana, sans-serif" 
-        fontSize="9" 
-        fill="var(--text-dim)" 
-        fontWeight="bold"
-        letterSpacing="2.8"
-        style={{ textTransform: 'uppercase' }}
+      {/* ===== TAGLINE ===== */}
+      <text
+        x="84"
+        y="74"
+        fontFamily="Inter, system-ui, sans-serif"
+        fontSize="11"
+        fill="var(--text-dim)"
+        fontWeight="600"
+        letterSpacing="1.4"
+        style={{ textTransform: "uppercase" }}
       >
         World of Stories
       </text>

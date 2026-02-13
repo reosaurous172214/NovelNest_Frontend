@@ -5,34 +5,38 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [wallet, setWallet] = useState(null); // Global wallet state
+  const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkUserStatus = useCallback(async () => {
     const token = localStorage.getItem("token");
+    
     if (!token) {
+      setUser(null);
+      setWallet(null);
       setLoading(false);
       return;
     }
 
     try {
-      // Parallel request to get both Profile and Wallet data
       const [userRes, walletRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(`${process.env.REACT_APP_API_URL}/api/payments/wallet`, {
           headers: { Authorization: `Bearer ${token}` },
-        })
+        }).catch(() => ({ data: null })) // Prevent wallet failure from breaking user load
       ]);
 
       if (userRes.data) {
         setUser(userRes.data);
         setWallet(walletRes.data);
+        // Sync local storage with fresh server data
         localStorage.setItem("data", JSON.stringify(userRes.data));
       }
     } catch (err) {
-      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+      console.error("Auth sync failed:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
         logout(); 
       }
     } finally {
@@ -40,22 +44,28 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // INITIAL LOAD: Check server status immediately
   useEffect(() => {
-    const stored = localStorage.getItem("data");
-    if (stored) setUser(JSON.parse(stored));
     checkUserStatus();
   }, [checkUserStatus]);
 
   const login = (userData, token) => {
+    // 1. Clear everything to prevent leakage
+    localStorage.removeItem("data");
+    
+    // 2. Set new credentials
     if (token) localStorage.setItem("token", token);
     localStorage.setItem("data", JSON.stringify(userData));
+    
+    // 3. Update state
     setUser(userData);
-    checkUserStatus(); // Refresh wallet immediately after login
+    
+    // 4. Force a fresh status check to get wallet and verify token
+    checkUserStatus();
   };
 
   const logout = () => {
-    localStorage.removeItem("data");
-    localStorage.removeItem("token");
+    localStorage.clear(); // Safer to clear all for a fresh start
     setUser(null);
     setWallet(null);
   };
@@ -65,7 +75,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         wallet,
-        setWallet, // Allow manual updates after purchases
+        setWallet,
         login,
         logout,
         loading,
@@ -73,7 +83,12 @@ export function AuthProvider({ children }) {
         refreshUser: checkUserStatus
       }}
     >
-      {children}
+      {/* Only show app when loading is false to prevent flashing old state */}
+      {!loading ? children : (
+        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+           <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }

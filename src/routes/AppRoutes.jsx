@@ -4,7 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 // Layouts
 import MainLayout from "../components/layout/MainLayout";
 import AdminLayout from "../components/layout/admin/AdminLayout";
-
+import { useAuth } from "../context/AuthContext";
 // User Pages
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -35,7 +35,7 @@ import RequestPage from "../pages/request/RequestPage";
 import AdminAudits from "../pages/admin/AdminAudit";
 const AppRoutes = () => {
   const location = useLocation();
-
+  const {user} = useAuth();
   // 1. Theme States
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("site-theme") || "default"
@@ -75,7 +75,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/wallet" element={<Wallet/>}/>
         <Route path="/novels" element={<Novel />} />
@@ -94,6 +94,7 @@ const AppRoutes = () => {
 
       {/* --- 2. ADMIN ROUTES --- */}
       {/* Note: AdminLayout receives props to pass them down to AdminAppearance */}
+      {user && user.role == "Admin" &&
       <Route element={<AdminLayout adminTheme={adminTheme} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/novels" element={<AdminNovels />} />
@@ -113,9 +114,11 @@ const AppRoutes = () => {
           } 
         />
       </Route>
-
+  }
       <Route path="*" element={<NotFound />} />
+      
     </Routes>
+        
   );
 };
 

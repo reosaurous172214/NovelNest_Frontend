@@ -3,14 +3,16 @@ import PropTypes from "prop-types";
 const NovelDetailMap = ({ novel }) => {
   if (!novel) return null;
 
+  const balancedRounded = "rounded-xl";
+
   return (
     <div
-      className="rounded-lg overflow-hidden shadow-lg transition-all duration-500
-        bg-[var(--bg-secondary)] border border-[var(--border)]"
+      className={`${balancedRounded} overflow-hidden shadow-lg transition-all duration-500
+        bg-[var(--bg-secondary)] border border-[var(--border)]`}
     >
       <DetailRow label="Titles">
         <ul className="list-disc pl-5 space-y-1 text-[var(--text-dim)]">
-          <li className="font-black text-[var(--text-main)]">{novel.title}</li>
+          <li className="font-bold text-[var(--text-main)]">{novel.title}</li>
           {novel.altTitles?.map((t, i) => (
             <li key={i} className="text-[var(--text-dim)] opacity-70 font-medium">
               {t}
@@ -20,23 +22,25 @@ const NovelDetailMap = ({ novel }) => {
       </DetailRow>
 
       <DetailRow label="Status">
-        <span className="text-[var(--accent)] font-black uppercase tracking-widest text-xs">
+        <span className="text-[var(--accent)] font-bold uppercase tracking-widest text-xs">
           {novel.status || "Ongoing"}
         </span>
       </DetailRow>
 
       <DetailRow label="Date Added">
-        {novel.createdAt
-          ? new Date(novel.createdAt).toLocaleDateString("en-US", {
-              year: "numeric", month: "long", day: "numeric",
-            })
-          : "—"}
+        <span className="font-medium text-[var(--text-dim)]">
+          {novel.createdAt
+            ? new Date(novel.createdAt).toLocaleDateString("en-US", {
+                year: "numeric", month: "long", day: "numeric",
+              })
+            : "—"}
+        </span>
       </DetailRow>
 
       <DetailRow label="Author">
         <div className="space-y-1">
           <div className="text-[var(--text-main)] font-bold">{novel.authorNative}</div>
-          <div className="text-[var(--accent)] font-mono text-xs uppercase tracking-tighter">
+          <div className="text-[var(--accent)] font-mono text-[10px] uppercase tracking-wider">
             {novel.author}
           </div>
         </div>
@@ -47,7 +51,7 @@ const NovelDetailMap = ({ novel }) => {
           {novel.genres?.map((g, i) => (
             <span
               key={i}
-              className="px-1 py-1 text-[10px] font-black uppercase tracking-widest rounded-md
+              className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md
                 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20"
             >
               {g}
@@ -61,7 +65,7 @@ const NovelDetailMap = ({ novel }) => {
           {novel.tags?.map((tag, i) => (
             <span
               key={i}
-              className="px-1 py-1 text-[10px] font-bold uppercase tracking-tighter rounded-md
+              className="px-2 py-1 text-[10px] font-bold uppercase tracking-tight rounded-md
                 bg-[var(--bg-primary)] text-[var(--text-dim)] border border-[var(--border)]"
             >
               {tag}
@@ -78,7 +82,7 @@ const DetailRow = ({ label, children }) => (
   <div className="flex border-b border-[var(--border)] last:border-b-0 group">
     <div
       className="w-24 md:w-44 px-4 md:px-5 py-4 font-mono uppercase tracking-[0.2em]
-        bg-[var(--bg-primary)] text-[var(--text-dim)] opacity-80 text-[10px] font-black"
+        bg-[var(--bg-primary)] text-[var(--text-dim)] opacity-80 text-[10px] font-bold"
     >
       {label}
     </div>

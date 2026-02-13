@@ -206,16 +206,23 @@ const Novels = () => {
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[var(--accent)] opacity-5 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row gap-12 relative z-10">
-        <aside className="hidden lg:block w-80 h-full sticky top-32">
-          <div className={`rounded-[3rem] p-10 ${glassStyle}`}>
+        <aside className="hidden lg:block w-72 shrink-0 sticky top-28 self-start">
+          <div
+            className={`
+      ${glassStyle}
+      rounded-xl
+      p-6
+      max-h-[calc(100vh-7rem)]
+      overflow-y-auto
+      space-y-6
+    `}
+          >
             <FiltersContent />
           </div>
         </aside>
 
         <main className="flex-1 space-y-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            
-
             <button
               onClick={() => setShowFilters(true)}
               className="lg:hidden flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[var(--text-main)] text-[var(--bg-primary)] text-[10px] font-black tracking-widest uppercase"
