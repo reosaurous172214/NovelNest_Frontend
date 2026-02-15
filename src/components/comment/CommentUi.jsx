@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback import
 import ReactMarkdown from "react-markdown";
 import {
   FaHeart,
@@ -65,19 +65,20 @@ const CommentSection = ({ novelId, currentUser }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
-  
-  const loadComments = async () => {
+
+  // FIX: Wrapped in useCallback to create a stable reference for useEffect
+  const loadComments = useCallback(async () => {
     try {
       const data = await commentApi.getByNovel(novelId);
       setComments(data);
     } catch (err) {
       console.error("Sync error:", err);
     }
-  };
+  }, [novelId]);
 
   useEffect(() => {
     loadComments();
-  }, [novelId]);
+  }, [loadComments]);
 
   const sortedComments = useMemo(() => {
     return [...comments].sort((a, b) => {
@@ -286,7 +287,6 @@ const CommentCard = ({
   const handleReply = async () => {
     if (!replyText.trim()) return;
     try {
-      // FIX: Always reply to the rootId to keep flat threading, but add @mention
       const contentWithMention = isReply
         ? `@${comment.userId?.username} ${replyText}`
         : replyText;
@@ -488,7 +488,7 @@ const CommentCard = ({
                 key={r._id}
                 comment={r}
                 isReply={true}
-                rootId={currentRootId} // Pass down the rootId to flat-thread deep replies
+                rootId={currentRootId}
                 novelId={novelId}
                 currentUser={currentUser}
                 onRefresh={onRefresh}
