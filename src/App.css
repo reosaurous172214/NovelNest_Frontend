@@ -230,3 +230,13 @@ body {
   /* Optional: makes the line look like a glow */
   box-shadow: 0 0 10px var(--accent);
 }
+@keyframes premium-pulse {
+  0% { box-shadow: 0 0 5px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.8); border-color: rgba(234, 179, 8, 1); }
+  100% { box-shadow: 0 0 5px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+}
+
+.premium-glow {
+  animation: premium-pulse 2s infinite ease-in-out;
+  border: 1.5px solid #eab308 !important; /* Tailwind yellow-500 */
+}

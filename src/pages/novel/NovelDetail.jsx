@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import NovelDetailMap from "../../components/novel/NovelDetailMap";
 import RecommendedNovels from "../../components/novel/RecommendedNovels";
 import CommentUi from "../../components/comment/CommentUi";
+import NovelPaymentOverlay from "../../components/novel/NovelPayment";
 import {
   FaStar,
   FaEye,
@@ -16,11 +17,12 @@ import {
   FaBookmark,
   FaLock,
   FaUnlock,
-  FaShoppingCart, // Added for the Buy button
+  FaShoppingCart,
+  FaTimes
 } from "react-icons/fa";
 import { useAddFavourites } from "../../hooks/useFavourites";
 import { useAddBookmark } from "../../hooks/useBookmarks"; 
-import { getToken } from "../../getItems/getAuthItems";
+import { getHeaders, getToken } from "../../getItems/getAuthItems";
 import { useAlert } from "../../context/AlertContext";
 import { useAuth } from "../../context/AuthContext";
 
@@ -35,37 +37,48 @@ const NovelDetail = () => {
   const [chapters, setChapters] = useState([]);
   const [tocPage, setTocPage] = useState(1);
   const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
   const saveMenuRef = useRef(null);
 
   const { addToFavourites, adding: favAdding } = useAddFavourites();
   const { addToBookmark, adding: bookAdding } = useAddBookmark(); 
   
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { showAlert } = useAlert();
   const token = getToken();
 
-  const totalChapters = chapters.length;
-  const totalPages = Math.ceil(totalChapters / CHAPTERS_PER_PAGE);
-  const startIdx = (tocPage - 1) * CHAPTERS_PER_PAGE;
-  const visibleChapters = chapters.slice(startIdx, startIdx + CHAPTERS_PER_PAGE);
+  // Ownership check: Checks if the current novel ID is in the user's unlockedNovels array
+  const isNovelUnlocked = user?.unlockedNovels?.some(novelId => novelId.toString() === id.toString());
+
+  const fetchWallet = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/payments/wallet`, getHeaders());
+      setUserBalance(res.data.balance || 0);
+    } catch (err) {
+      console.error("Wallet error", err);
+    }
+  }, [token]);
+
+  const fetchNovelData = useCallback(async () => {
+    try {
+      const novelRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/novels/${id}`);
+      setNovel(novelRes.data);
+
+      const chaptersRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/chapters/novel/${id}`);
+      const rawData = Array.isArray(chaptersRes.data) ? chaptersRes.data : chaptersRes.data.chapters || [];
+      const sortedChapters = [...rawData].sort((a, b) => (b.chapterNumber || 0) - (a.chapterNumber || 0));
+      
+      setChapters(sortedChapters);
+    } catch (err) {
+      console.error("Failed to load novel:", err);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const fetchNovel = async () => {
-      try {
-        const novelRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/novels/${id}`);
-        setNovel(novelRes.data);
-
-        const chaptersRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/chapters/novel/${id}`);
-        const rawData = Array.isArray(chaptersRes.data) ? chaptersRes.data : chaptersRes.data.chapters || [];
-
-        const sortedChapters = [...rawData].sort((a, b) => (b.chapterNumber || 0) - (a.chapterNumber || 0));
-        setChapters(sortedChapters);
-        setTocPage(1);
-      } catch (err) {
-        console.error("Failed to load novel:", err);
-      }
-    };
-    fetchNovel();
+    fetchNovelData();
+    fetchWallet();
 
     const handleClickOutside = (event) => {
       if (saveMenuRef.current && !saveMenuRef.current.contains(event.target)) {
@@ -74,20 +87,14 @@ const NovelDetail = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [id]);
+  }, [id, fetchNovelData, fetchWallet]);
 
-  if (!novel) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
-      <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold animate-pulse">Loading Novel...</p>
-    </div>
-  );
-
+  /* --- HANDLERS (FIXED: Defined missing functions) --- */
   const handleFavourite = async () => {
     if (!token) return showAlert("Log in required.", "info");
     try {
       const response = await addToFavourites(id);
-      showAlert(`"${novel.title}" ${response?.message || "Added"}`, "success");
+      showAlert(`"${novel.title}" ${response?.message || "Added to Favourites"}`, "success");
       setShowSaveMenu(false);
     } catch (err) { showAlert("Action failed.", "error"); }
   };
@@ -102,17 +109,81 @@ const NovelDetail = () => {
   };
 
   const handleBuyNovel = () => {
-    if (!token) return showAlert("Log in required.", "info");
-    showAlert("Processing digital acquisition...", "info");
-    // Add your purchase logic or navigation here
+    // 1. Check for token to ensure user is logged in
+    if (!token) return showAlert("Log in required to purchase.", "info");
+    
+    // 2. Prevent redundant purchase attempts if already unlocked
+    // This uses 'unlockedNovels' to match your Mongoose Schema
+    if (isNovelUnlocked) return showAlert("Novel already in your library.", "info");
+    
+    setShowPayment(true);
   };
+
+  const onUnlockConfirm = async () => {
+    try {
+      // 3. POST request to your updated /:novelId/unlock endpoint
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/novels/${id}/unlock`, 
+        {}, 
+        getHeaders()
+      );
+
+      showAlert(res.data.message, "success");
+      setShowPayment(false);
+      
+      // 4. Update the GLOBAL user state immediately
+      // This ensures the "Buy" button turns into "Unlocked" without a page refresh
+      if (user) {
+        const updatedUnlocked = [...(user.unlockedNovels || []), id.toString()];
+        setUser({ ...user, unlockedNovels: updatedUnlocked });
+      }
+
+      // 5. Refresh wallet to show new balance
+      fetchWallet(); 
+    } catch (err) {
+      // 6. Handle 403 (Insufficient Balance) or 500 (Server Error)
+      const errorMsg = err.response.data.message  || "Unlock failed. Please try again.";
+      showAlert(errorMsg, "error");
+    }
+  };
+
+  if (!novel) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
+      <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold">Loading Novel...</p>
+    </div>
+  );
+
+  const totalChapters = chapters.length;
+  const totalPages = Math.ceil(totalChapters / CHAPTERS_PER_PAGE);
+  const startIdx = (tocPage - 1) * CHAPTERS_PER_PAGE;
+  const visibleChapters = chapters.slice(startIdx, startIdx + CHAPTERS_PER_PAGE);
 
   const balancedRounded = "rounded-xl"; 
   const glassStyle = `bg-[var(--bg-secondary)] border border-[var(--border)] shadow-xl ${balancedRounded}`;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-28 relative overflow-hidden transition-colors">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-28 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[var(--accent)] opacity-5 blur-[120px] pointer-events-none" />
+
+      {/* PAYMENT MODAL OVERLAY */}
+      {showPayment && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md">
+            <button 
+              onClick={() => setShowPayment(false)}
+              className="absolute -top-12 right-0 text-white/50 hover:text-white transition-all"
+            >
+              <FaTimes size={24} />
+            </button>
+            <NovelPaymentOverlay 
+              novel={novel} 
+              userBalance={userBalance} 
+              onUnlock={onUnlockConfirm} 
+            />
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         
@@ -135,11 +206,11 @@ const NovelDetail = () => {
 
               <p className="text-[10px] text-[var(--text-dim)] font-bold tracking-[0.2em] uppercase mb-6 flex items-center gap-2">
                 Created By <span className="w-4 h-[1px] bg-[var(--border)]"></span>
-                <span className="text-[var(--text-main)]">{novel.author}</span>
+                <span className="text-[var(--text-main)]">{novel.author?.username || novel.author}</span>
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-                <StatBox label="Status" value="Ongoing" icon={<FaInfoCircle size={10} />} color="text-emerald-500" radius={balancedRounded} />
+                <StatBox label="Status" value={novel.status || "Ongoing"} icon={<FaInfoCircle size={10} />} color="text-emerald-500" radius={balancedRounded} />
                 <StatBox label="Chapters" value={`${totalChapters}`} icon={<FaBookOpen size={10} />} radius={balancedRounded} />
                 <StatBox label="Views" value={novel.views?.toLocaleString()} icon={<FaEye size={10} />} radius={balancedRounded} />
                 <StatBox label="Rating" value={novel.rating || "4.8"} icon={<FaStar size={10} />} color="text-yellow-500" radius={balancedRounded} />
@@ -161,12 +232,18 @@ const NovelDetail = () => {
                   <FaPlay size={10} /> Start Reading
                 </Link>
 
-                <button
-                  onClick={handleBuyNovel}
-                  className={`px-8 py-4 ${balancedRounded} font-bold text-white text-[11px] uppercase tracking-widest bg-emerald-600 border border-emerald-500 flex items-center justify-center gap-3 hover:bg-emerald-700 active:scale-95 transition-all shadow-lg`}
-                >
-                  <FaShoppingCart size={10} /> Buy Novel
-                </button>
+                {isNovelUnlocked ? (
+                  <div className={`px-8 py-4 ${balancedRounded} font-bold text-emerald-500 text-[11px] uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-3 shadow-sm`}>
+                    <FaUnlock size={10} /> Novel Unlocked
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleBuyNovel}
+                    className={`px-8 py-4 ${balancedRounded} font-bold text-white text-[11px] uppercase tracking-widest bg-emerald-600 border border-emerald-500 flex items-center justify-center gap-3 hover:bg-emerald-700 active:scale-95 transition-all shadow-lg`}
+                  >
+                    <FaShoppingCart size={10} /> Buy Full Novel
+                  </button>
+                )}
                 
                 <div className="relative" ref={saveMenuRef}>
                   <button
@@ -177,7 +254,7 @@ const NovelDetail = () => {
                   </button>
 
                   {showSaveMenu && (
-                    <div className={`absolute top-full left-0 mt-2 w-full min-w-[180px] bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl z-50 overflow-hidden ${balancedRounded}`}>
+                    <div className={`absolute top-full left-0 mt-2 w-full min-w-[180px] bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl z-50 overflow-hidden ${balancedRounded} animate-in slide-in-from-top-2 duration-200`}>
                       <button onClick={handleFavourite} disabled={favAdding} className="w-full px-5 py-4 text-left text-[11px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/10 flex items-center gap-3 text-[var(--text-main)] border-b border-[var(--border)]">
                         <FaHeart className="text-red-500" /> Favorites
                       </button>
@@ -192,7 +269,7 @@ const NovelDetail = () => {
           </div>
         </div>
 
-        {/* ... Rest of the tabs and sections remain exactly the same ... */}
+        {/* TABS SECTION */}
         <div className={`mt-10 overflow-hidden ${glassStyle}`}>
           <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[var(--border)] bg-[var(--bg-primary)]/50">
             {[{ id: "about", label: "Description" }, { id: "toc", label: "Chapters" }, { id: "reviews", label: "Reviews" }, { id: "recommend", label: "Recommended" }].map((tab) => (
@@ -215,11 +292,11 @@ const NovelDetail = () => {
                 <h2 className="text-sm font-bold uppercase tracking-widest mb-4 text-[var(--text-main)] flex items-center gap-2">
                   Summary
                 </h2>
-                <p className="text-[var(--text-dim)] leading-relaxed text-base font-medium opacity-90">
-                  {expanded ? novel.description : (novel.description?.slice(0, 280) + (novel.description?.length > 280 ? "..." : ""))}
+                <p className="text-[var(--text-dim)] leading-relaxed text-base font-medium opacity-90 whitespace-pre-wrap">
+                  {expanded ? novel.description : (novel.description?.slice(0, 400) + (novel.description?.length > 400 ? "..." : ""))}
                 </p>
-                {novel.description?.length > 280 && (
-                  <button onClick={() => setExpanded(!expanded)} className="mt-4 text-[var(--accent)] font-bold text-[9px] uppercase tracking-widest">
+                {novel.description?.length > 400 && (
+                  <button onClick={() => setExpanded(!expanded)} className="mt-4 text-[var(--accent)] font-bold text-[9px] uppercase tracking-widest hover:underline">
                     {expanded ? "[ READ LESS ]" : "[ READ MORE ]"}
                   </button>
                 )}
@@ -239,7 +316,7 @@ const NovelDetail = () => {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-20 gap-y-3">
                   {visibleChapters.map((ch) => {
-                    const isUnlocked = user?.unlockedChapters?.some(id => id.toString() === ch._id.toString());
+                    const isChapterUnlocked = user?.unlockedChapters?.some(id => id.toString() === ch._id.toString());
                     const isFree = ch.chapterNumber <= (novel.freeChapters || 10);
 
                     return (
@@ -249,10 +326,13 @@ const NovelDetail = () => {
                         </span>
                         <div className="ml-4 flex-1 min-w-0 flex items-center justify-between">
                           <span className="block text-[11px] font-bold text-[var(--text-main)] truncate uppercase">{ch.title}</span>
-                          {!isFree && (
+                          {!isFree && !isNovelUnlocked && (
                             <div className="ml-2">
-                              {isUnlocked ? <FaUnlock size={10} className="text-emerald-500 opacity-60" /> : <FaLock size={10} className="text-[var(--text-dim)]" />}
+                              {isChapterUnlocked ? <FaUnlock size={10} className="text-emerald-500 opacity-60" /> : <FaLock size={10} className="text-[var(--text-dim)]" />}
                             </div>
+                          )}
+                          {isNovelUnlocked && !isFree && (
+                            <FaUnlock size={10} className="text-emerald-500 opacity-60" />
                           )}
                         </div>
                       </Link>
@@ -277,9 +357,9 @@ const NovelDetail = () => {
           </div>
         </div>
 
-        {/* DETAILS GRID */}
+        {/* STORY DETAILS GRID */}
         <div className="mt-10 text-left">
-          <div className={`p-4 ${glassStyle}`}>
+          <div className={`p-8 ${glassStyle}`}>
             <h2 className="text-sm font-bold uppercase tracking-widest mb-8 text-[var(--text-main)] flex items-center gap-3">
               <FaShieldAlt className="text-[var(--accent)]" size={16} /> Story Details
             </h2>
@@ -291,7 +371,6 @@ const NovelDetail = () => {
   );
 };
 
-// ... RatingInput and StatBox components remain exactly the same ...
 const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
   const [hover, setHover] = useState(0);
   const [selected, setSelected] = useState(currentRating || 0);
@@ -328,12 +407,12 @@ const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
 };
 
 const StatBox = ({ label, value, icon, radius, color = "text-[var(--text-main)]" }) => (
-  <div className={`bg-[var(--bg-primary)] border border-[var(--border)] p-2 ${radius} text-left flex flex-col justify-between shadow-sm`}>
+  <div className={`bg-[var(--bg-primary)] border border-[var(--border)] p-3 ${radius} text-left flex flex-col justify-between shadow-sm`}>
     <div className="flex items-center gap-2 mb-2 opacity-60">
       {icon}
       <p className="text-[10px] uppercase font-bold tracking-widest">{label}</p>
     </div>
-    <p className={`text-[18px] font-bold uppercase tracking-tight ${color}`}>{value}</p>
+    <p className={`text-[16px] font-bold uppercase tracking-tight ${color}`}>{value}</p>
   </div>
 );
 

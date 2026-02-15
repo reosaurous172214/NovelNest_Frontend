@@ -33,6 +33,9 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
   const { user } = useAuth();
 
   const isAuthorOrAdmin = user?.role === 'author' || user?.role === 'admin';
+  
+  /* --- PREMIUM CHECK --- */
+  const isPremium = user?.subscription?.plan && user?.subscription?.plan !== "free";
 
   const getImageUrl = (path) => {
     if (!path) return "";
@@ -112,6 +115,19 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
 
   return (
     <>
+      {/* GLOW CSS */}
+      <style>{`
+        @keyframes premium-pulse {
+          0% { box-shadow: 0 0 5px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+          50% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.8); border-color: rgba(234, 179, 8, 1); }
+          100% { box-shadow: 0 0 5px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+        }
+        .premium-glow {
+          animation: premium-pulse 2s infinite ease-in-out;
+          border: 1.5px solid #eab308 !important;
+        }
+      `}</style>
+
       <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 antialiased ${show ? "translate-y-0" : "-translate-y-full"} ${scrolled ? "pt-2" : "pt-4"}`}>
         <div className={`mx-auto px-4 w-full transition-all duration-500 ${scrolled ? "max-w-[95%]" : "max-w-[98%]"}`}>
           
@@ -200,13 +216,25 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                 <div className="flex items-center gap-2 md:gap-3">
                   <NotificationBar currentUser={user} />
                   <div className="relative hidden md:block" ref={profileRef}>
-                    <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2.5 p-1 pr-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl transition-all hover:border-[var(--accent)]/50 active:scale-95">
-                      {profileImg ? (
-                        <img src={profileImg} alt="" className="w-8 h-8 rounded-xl object-cover shadow-sm" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white text-xs font-bold shadow-sm">{userInitial}</div>
-                      )}
-                      <span className="hidden lg:block text-xs font-semibold text-[var(--text-main)] truncate max-w-[80px] tracking-tight">{user?.username}</span>
+                    <button 
+                      onClick={() => setProfileOpen(!profileOpen)} 
+                      className={`flex items-center gap-2.5 p-1 pr-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl transition-all active:scale-95 ${isPremium ? 'premium-glow' : 'hover:border-[var(--accent)]/50'}`}
+                    >
+                      <div className="relative">
+                        {profileImg ? (
+                          <img src={profileImg} alt="" className="w-8 h-8 rounded-xl object-cover shadow-sm" />
+                        ) : (
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm ${isPremium ? 'bg-yellow-500' : 'bg-[var(--accent)]'}`}>{userInitial}</div>
+                        )}
+                        
+                        {/* Premium Crown Badge Overlay */}
+                        {isPremium && (
+                          <div className="absolute -top-1.5 -right-1.5 bg-yellow-500 text-black rounded-full p-0.5 shadow-sm border border-[var(--bg-secondary)]">
+                            <RiVipCrownLine size={8} />
+                          </div>
+                        )}
+                      </div>
+                      <span className={`hidden lg:block text-xs font-semibold truncate max-w-[80px] tracking-tight ${isPremium ? 'text-yellow-500 font-bold' : 'text-[var(--text-main)]'}`}>{user?.username}</span>
                       <RiArrowRightSLine size={12} className={`text-[var(--text-dim)] transition-transform rotate-90 ${profileOpen ? 'rotate-[270deg]' : ''}`} />
                     </button>
                     {profileOpen && (
@@ -216,8 +244,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                           <DropdownItem to="/profile" icon={<RiUserLine />} label="My Profile" />
                           <DropdownItem to="/library" icon={<RiBookmarkLine />} label="My Library" />
                           
-                          {/* Desktop Dropdown Additions */}
-                          <DropdownItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" />
+                          <DropdownItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" active={isPremium} />
                           
                           <DropdownItem to="/settings" icon={<RiSettings4Line />} label="Settings" />
                           <DropdownItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" />
@@ -262,14 +289,23 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
         {isAuthenticated ? (
           <Link to="/profile" onClick={() => setMenuOpen(false)} className="p-6 bg-[var(--bg-primary)]/40 border-b border-[var(--border)] block transition-colors hover:bg-[var(--bg-primary)]/60">
             <div className="flex items-center gap-4">
-              {profileImg ? (
-                <img src={profileImg} alt="" className="w-12 h-12 rounded-2xl object-cover border border-[var(--border)] shadow-sm" />
-              ) : (
-                <div className="w-12 h-12 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-white text-lg font-bold shadow-sm">{userInitial}</div>
-              )}
+              <div className="relative">
+                {profileImg ? (
+                  <img src={profileImg} alt="" className={`w-12 h-12 rounded-2xl object-cover border shadow-sm ${isPremium ? 'premium-glow' : 'border-[var(--border)]'}`} />
+                ) : (
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-lg font-bold shadow-sm ${isPremium ? 'premium-glow bg-yellow-500' : 'bg-[var(--accent)]'}`}>{userInitial}</div>
+                )}
+                {isPremium && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 border-2 border-[var(--bg-secondary)] shadow-lg">
+                    <RiVipCrownLine size={12} />
+                  </div>
+                )}
+              </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-semibold text-[var(--text-main)] truncate tracking-tight">{user?.username}</p>
-                <p className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-widest opacity-70">{user?.role || 'Reader'}</p>
+                <p className={`text-sm font-semibold truncate tracking-tight ${isPremium ? 'text-yellow-500' : 'text-[var(--text-main)]'}`}>{user?.username}</p>
+                <p className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-widest opacity-70">
+                  {isPremium ? 'Premium Member' : (user?.role || 'Reader')}
+                </p>
               </div>
             </div>
           </Link>
@@ -297,8 +333,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               <p className="px-4 text-[9px] font-semibold text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 opacity-60">System</p>
               <MobileSidebarItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" onClick={() => setMenuOpen(false)} />
               
-              {/* Mobile Sidebar Additions */}
-              <MobileSidebarItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" onClick={() => setMenuOpen(false)} />
+              <MobileSidebarItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" onClick={() => setMenuOpen(false)} active={isPremium} />
               <MobileSidebarItem to="/settings" icon={<RiSettings4Line />} label="Settings" onClick={() => setMenuOpen(false)} />
               
               <MobileSidebarItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" onClick={() => setMenuOpen(false)} />
@@ -327,8 +362,8 @@ const NavItem = ({ to, icon, label, active }) => (
   </Link>
 );
 
-const DropdownItem = ({ to, icon, label }) => (
-  <Link to={to} className="flex items-center gap-3 px-4 py-2.5 text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-primary)] rounded-xl transition-all text-[11px] font-semibold uppercase tracking-tight">
+const DropdownItem = ({ to, icon, label, active }) => (
+  <Link to={to} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-[11px] font-semibold uppercase tracking-tight ${active ? 'text-yellow-500 bg-yellow-500/5' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-primary)]'}`}>
     <span className="text-[15px]">{icon}</span> {label}
   </Link>
 );

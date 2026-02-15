@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { 
   Camera, Edit3, Lock, User, Mail, Globe, 
-  Settings, ShieldCheck, Activity, Save, CheckCircle2, ExternalLink 
+  Settings, ShieldCheck, Activity, Save, CheckCircle2, ExternalLink,
+  Crown // Added for Premium Badge
 } from "lucide-react";
 import { useAlert } from "../context/AlertContext";
 
@@ -22,6 +23,9 @@ export default function Profile() {
     showEmail: false, showMobile: false, showLocation: true,
     currentPassword: "", newPassword: "", confirmPassword: ""
   });
+
+  /* --- PREMIUM CHECK --- */
+  const isPremium = user?.subscription?.plan && user?.subscription?.plan !== "free";
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -133,17 +137,36 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] py-20 px-4 md:px-12 transition-colors duration-500">
+      <style>{`
+        @keyframes premium-pulse {
+          0% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+          50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.8); border-color: rgba(234, 179, 8, 1); }
+          100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.5); }
+        }
+        .premium-glow-profile {
+          animation: premium-pulse 3s infinite ease-in-out;
+          border: 2px solid #eab308 !important;
+        }
+      `}</style>
+
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* --- MEDIUM HERO HEADER --- */}
+        {/* --- HERO HEADER --- */}
         <div className={`${glassStyle} overflow-hidden relative`}>
           <div className="relative p-8 flex flex-col md:flex-row items-center md:items-center gap-8">
             <div className="relative">
               <img
                 src={preview || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"}
-                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-[var(--bg-primary)] shadow-md"
+                className={`w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-[var(--bg-primary)] shadow-md transition-all ${isPremium ? 'premium-glow-profile' : ''}`}
                 alt="Profile"
               />
+              {/* Premium Crown Badge Overlay */}
+              {isPremium && (
+                <div className="absolute -top-3 -right-3 bg-yellow-500 text-black p-2 rounded-xl shadow-lg border-4 border-[var(--bg-secondary)] animate-bounce">
+                  <Crown size={20} fill="black" />
+                </div>
+              )}
+
               {edit && (
                 <label className="absolute -bottom-2 -right-2 bg-[var(--accent)] p-2.5 rounded-xl cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-lg">
                   <Camera size={18} className="text-white" />
@@ -153,7 +176,14 @@ export default function Profile() {
             </div>
 
             <div className="flex-1 text-center md:text-left space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-main)] uppercase">{user.username}</h1>
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-main)] uppercase">{user.username}</h1>
+                {isPremium && (
+                  <span className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <Crown size={10} fill="currentColor" /> Premium Member
+                  </span>
+                )}
+              </div>
               <p className="text-[var(--text-dim)] max-w-lg font-medium leading-relaxed opacity-90">{user.bio || "No biography provided."}</p>
             </div>
             
@@ -243,7 +273,7 @@ export default function Profile() {
                     <DataBar label="Novels Read" value={user.readingStats?.totalNovelsRead || 12} max={100} color="bg-[var(--accent)]" />
                     <DataBar label="Activity Level" value={65} max={100} color="bg-blue-500" />
                     <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-6">
-                        <DataRow label="Last Active" value={new Date(user.readingStats?.lastActiveAt).toLocaleDateString()}/>
+                        <DataRow label="Last Active" value={user.readingStats?.lastActiveAt ? new Date(user.readingStats.lastActiveAt).toLocaleDateString() : "Today"}/>
                         <DataRow label="Member Since" value={new Date(user.createdAt).toLocaleDateString()}/>
                     </div>
                 </div>
@@ -275,6 +305,23 @@ export default function Profile() {
                         <p className="text-[9px] text-[var(--text-dim)] uppercase tracking-wider opacity-60">Status: Active</p>
                     </div>
                 </div>
+
+                {/* --- PREMIUM SECTION IN SIDEBAR --- */}
+                {isPremium ? (
+                  <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Crown size={16} className="text-yellow-500" />
+                      <p className="text-xs font-bold text-yellow-500 uppercase tracking-widest">Premium Active</p>
+                    </div>
+                    <p className="text-[10px] text-yellow-500/70 font-medium leading-relaxed">You have full access to bonus novels and exclusive discounts.</p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-[var(--accent)]/5 rounded-xl border border-[var(--accent)]/10">
+                    <p className="text-xs font-bold text-[var(--text-main)] uppercase tracking-tight mb-2">Standard Plan</p>
+                    <button onClick={() => window.location.href='/subscription'} className="text-[9px] text-[var(--accent)] font-bold uppercase hover:underline">Upgrade to Premium →</button>
+                  </div>
+                )}
+
                 <div className="space-y-4 pt-6 border-t border-white/5">
                     <DataRow label="Integrity" value="Stable" />
                     <DataRow label="Region" value={form.country || "GLOBAL"} />
