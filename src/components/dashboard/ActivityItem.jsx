@@ -20,14 +20,14 @@ const ActivityItem = ({ activity }) => {
           {getActionIcon(activity.actionType || activity.action)}
         </div>
         <div className="flex-1 min-w-0 border-b border-[var(--border)] pb-3 md:pb-4 group-last:border-0">
-            <p className="text-[9px] md:text-[10px] font-bold text-[var(--text-main)] truncate">
+            <p className="text-[9px] md:text-[12px] font-semibold text-[var(--text-main)] truncate">
               {activity.meta?.novelTitle || "System Process"}
             </p>
             <div className="flex justify-between items-center mt-0.5">
-              <span className="text-[7px] md:text-[8px] text-[var(--text-dim)] uppercase font-black tracking-tighter">
+              <span className="text-[9px] md:text-[8px] text-[var(--text-dim)] uppercase font-semibold ">
                 {(activity.actionType || activity.action || "LOG").replace(/_/g, ' ')}
               </span>
-              <span className="text-[6px] md:text-[7px] font-black opacity-30 italic">
+              <span className="text-[6px] md:text-[9px] font-semibold opacity-30 italic">
                 {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>

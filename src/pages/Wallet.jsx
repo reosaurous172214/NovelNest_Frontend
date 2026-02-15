@@ -57,7 +57,11 @@ export default function WalletDashboard() {
         getHeaders(),
         { withCredentials: true }
       );
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        localStorage.setItem("origin","/wallet");
+        window.location.href = data.url;
+        
+      }
     } catch (err) {
       console.error("Payment processing error:", err.message);
     }

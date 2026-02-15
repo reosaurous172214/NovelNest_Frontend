@@ -83,7 +83,7 @@ export default function AdminNovels() {
   const renderCoverPic = (novel) => {
     const hasCover = novel.coverImage && typeof novel.coverImage === 'string';
     const isExternal = hasCover && novel.coverImage.startsWith('http');
-    const imgSrc = isExternal ? novel.coverImage : `${process.env.REACT_APP_API_URL}/${novel.coverImage}`;
+    const imgSrc = isExternal ? novel.coverImage : `${process.env.REACT_APP_API_URL}${novel.coverImage}`;
 
     return (
       <div className="w-10 h-14 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-primary)] flex-shrink-0 flex items-center justify-center">

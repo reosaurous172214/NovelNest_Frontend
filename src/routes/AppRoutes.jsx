@@ -5,6 +5,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
 import AdminLayout from "../components/layout/admin/AdminLayout";
 import { useAuth } from "../context/AuthContext";
+
 // User Pages
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -33,10 +34,14 @@ import AdminNovels from "../pages/admin/AdminNovel";
 import AdminAppearance from "../pages/admin/AdminAppearance";
 import RequestPage from "../pages/request/RequestPage";
 import AdminAudits from "../pages/admin/AdminAudit";
+import Subscription from "../pages/Subscription";
+import AdminAnalytics from "../pages/admin/AdminAnalytics";
+
 const AppRoutes = () => {
   const location = useLocation();
-  const {user} = useAuth();
-  // 1. Theme States
+  const { user } = useAuth();
+
+  // 1. Initial States from LocalStorage
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("site-theme") || "default"
   );
@@ -44,7 +49,24 @@ const AppRoutes = () => {
     localStorage.getItem("admin-theme") || "admin-tech-dark"
   );
 
-  // 2. Global Theme Manager
+  // Flag to prevent the database from overriding manual changes in Settings.jsx
+  const [hasSynced, setHasSynced] = useState(false);
+
+  // 2. SMART SYNC: Load user preference only once on login/refresh
+  useEffect(() => {
+    if (user?.preferences?.theme && !hasSynced) {
+      setCurrentTheme(user.preferences.theme);
+      localStorage.setItem("site-theme", user.preferences.theme);
+      setHasSynced(true);
+    }
+  }, [user, hasSynced]);
+
+  // Reset sync if user logs out so the next login triggers a fresh sync
+  useEffect(() => {
+    if (!user) setHasSynced(false);
+  }, [user]);
+
+  // 3. GLOBAL THEME MANAGER (DOM Injection)
   useEffect(() => {
     const root = window.document.documentElement;
     const isAdminPath = location.pathname.startsWith("/admin");
@@ -61,9 +83,10 @@ const AppRoutes = () => {
       root.classList.add(`theme-${adminTheme}`);
       localStorage.setItem("admin-theme", adminTheme);
     } else {
+      // Logic for User Themes
       if (currentTheme !== "default") {
         root.classList.add(`theme-${currentTheme}`);
-      }
+      } 
       localStorage.setItem("site-theme", currentTheme);
     }
   }, [currentTheme, adminTheme, location.pathname]);
@@ -82,26 +105,29 @@ const AppRoutes = () => {
         <Route path="/auth-success" element={<AuthSuccess />} />
         <Route path="/novel/create" element={<CreateNovel />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path = '/request' element = {<RequestPage/>}/>
+        <Route path="/subscription" element={<Subscription/>} />
+        <Route path='/request' element={<RequestPage/>}/>
         <Route path="/novel/edit/:id" element={<EditNovel />} />
         <Route path="/novel/author/me" element={<NovelUploads />} />
         <Route path="/novel/:id" element={<NovelDetail />} />
         <Route path="/novel/:novelId/chapter/:chapterNumber" element={<Chapter />} />
         <Route path="/library" element={<Library />} />
+        
+        {/* Settings now has full control again */}
         <Route path="/settings" element={<Settings currentTheme={currentTheme} setTheme={setCurrentTheme} />} />
+        
         <Route path="/notifications" element={<Notification />} />
       </Route>
 
       {/* --- 2. ADMIN ROUTES --- */}
-      {/* Note: AdminLayout receives props to pass them down to AdminAppearance */}
-      {user && user.role == "Admin" &&
+      { user && user.role === "admin" &&
       <Route element={<AdminLayout adminTheme={adminTheme} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/novels" element={<AdminNovels />} />
         <Route path="/admin/requests" element={<AdminRequests />} />
+        <Route path="/admin/analytics" element={<AdminAnalytics/>} />
         <Route path="/admin/audit" element={<AdminAudits/>}/>
         <Route path="/admin/activity" element={<AdminOperations />} />
-        {/* Pass all theme props here so the appearance page can actually change them */}
         <Route 
           path="/admin/appearance" 
           element={
@@ -114,11 +140,9 @@ const AppRoutes = () => {
           } 
         />
       </Route>
-  }
+      }
       <Route path="*" element={<NotFound />} />
-      
     </Routes>
-        
   );
 };
 

@@ -130,3 +130,26 @@ export const liftban = async (userId) => {
     throw new Error(e.response?.data?.message || "Failed to unban user");
   }
 };
+// ... existing imports
+
+// Transactions API for Ledger Export
+export const fetchAllTransactions = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/transactions/export`, getHeaders());
+
+    // Case 1: Backend returns { transactions: [...] }
+    if (res.data && Array.isArray(res.data.transactions)) {
+      return res.data.transactions;
+    }
+
+    // Case 2: Backend returns [...]
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    return [];
+  } catch (e) {
+    console.error("Error fetching transaction ledger:", e);
+    return [];
+  }
+};

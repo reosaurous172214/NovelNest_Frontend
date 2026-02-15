@@ -1,8 +1,7 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { IoLibrary } from "react-icons/io5";
-import { FaHistory, FaHeart, FaBookmark, FaTrash } from "react-icons/fa";
+import { LuHistory, LuHeart, LuBookmark, LuTrash2, LuLibrary } from "react-icons/lu"; // Switched to Lucide for consistent weights
 
 import UniversalCard from "../../components/library/UniversalCard";
 import {
@@ -45,14 +44,12 @@ const Library = ({ isDash = false }) => {
 
     setLoading(true);
     try {
-      const endpoint =
-        activeTab === TABS.BOOKMARKS ? "bookmarks/get" : activeTab;
+      const endpoint = activeTab === TABS.BOOKMARKS ? "bookmarks/get" : activeTab;
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/lib/${endpoint}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Syncing with your mapped logic
       setNovels(
         res.data.map((item) => ({
           ...(item.novel || item),
@@ -77,19 +74,16 @@ const Library = ({ isDash = false }) => {
   const triggerDelete = (novelId) => {
     setModalConfig({
       title: "Remove Entry",
-      message: `De-sync this record from your ${activeTab} protocol?`,
+      message: `Are you sure you want to remove this from your ${activeTab}?`,
       onConfirm: async () => {
         const token = localStorage.getItem("token");
-        const path =
-          activeTab === TABS.BOOKMARKS
+        const path = activeTab === TABS.BOOKMARKS
             ? `bookmarks/delete/${novelId}`
             : `${activeTab}/${novelId}`;
         try {
           await axios.delete(
             `${process.env.REACT_APP_API_URL}/api/lib/${path}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
+            { headers: { Authorization: `Bearer ${token}` } },
           );
           setNovels((prev) => prev.filter((n) => n._id !== novelId));
           setShowModal(false);
@@ -103,18 +97,15 @@ const Library = ({ isDash = false }) => {
 
   const handleClearAll = () => {
     setModalConfig({
-      title: `Purge ${activeTab}`,
-      message: `EMERGENCY: This will permanently wipe all ${activeTab} data. Proceed?`,
+      title: `Clear All ${activeTab}`,
+      message: `Warning: This will permanently wipe all your ${activeTab} data. This action cannot be undone.`,
       onConfirm: async () => {
         const token = localStorage.getItem("token");
-        const clearPath =
-          activeTab === TABS.BOOKMARKS ? "bookmarks/clearall" : activeTab;
+        const clearPath = activeTab === TABS.BOOKMARKS ? "bookmarks/clearall" : activeTab;
         try {
           await axios.delete(
             `${process.env.REACT_APP_API_URL}/api/lib/${clearPath}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
+            { headers: { Authorization: `Bearer ${token}` } },
           );
           setNovels([]);
           setShowModal(false);
@@ -126,13 +117,11 @@ const Library = ({ isDash = false }) => {
     setShowModal(true);
   };
 
-  // Prevent flicker on mount
   if (!isDataInitialized && loading) return <Loading activeTab={activeTab} />;
 
   return (
-    <div
-      className={`w-full bg-[var(--bg-primary)] text-[var(--text-main)] transition-all duration-500 ${isDash ? "pt-6" : "pt-32 min-h-screen px-4 pb-32"}`}
-    >
+    <div className={`w-full bg-[var(--bg-primary)] text-[var(--text-main)] transition-all duration-500 font-sans antialiased ${isDash ? "pt-6" : "pt-24 md:pt-32 min-h-screen px-4 pb-20 md:pb-32"}`}>
+      
       <ConfirmModal
         isOpen={showModal}
         {...modalConfig}
@@ -140,21 +129,26 @@ const Library = ({ isDash = false }) => {
       />
 
       <div className="max-w-7xl mx-auto">
-        {/* NAV & CONTROLS BAR */}
-        <nav className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 border-b border-[var(--border)] pb-8">
-          <div className="flex flex-col gap-2">
-            <div className="bg-[var(--bg-secondary)] rounded-full p-1.5 flex gap-1 border border-[var(--border)] overflow-x-auto no-scrollbar shadow-inner">
+        {/* --- NAVIGATION & CONTROLS BAR --- */}
+        <nav className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-6 border-b border-[var(--border)] pb-6 md:pb-8">
+          
+          <div className="w-full md:w-auto">
+            <div className="bg-[var(--bg-secondary)] rounded-2xl md:rounded-full p-1.5 flex flex-row gap-1 border border-[var(--border)] overflow-x-auto no-scrollbar shadow-sm">
               {[
-                [TABS.HISTORY, "History", <FaHistory />],
-                [TABS.FAVOURITES, "Favorites", <FaHeart />],
-                [TABS.BOOKMARKS, "Bookmarks", <FaBookmark />],
+                [TABS.HISTORY, "History", <LuHistory size={16} />],
+                [TABS.FAVOURITES, "Favorites", <LuHeart size={16} />],
+                [TABS.BOOKMARKS, "Bookmarks", <LuBookmark size={16} />],
               ].map(([key, label, icon]) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-black transition-all text-[10px] tracking-wider uppercase whitespace-nowrap ${activeTab === key ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20" : "text-[var(--text-dim)] hover:text-[var(--text-main)]"}`}
+                  className={`flex items-center justify-center gap-2 px-5 md:px-7 py-2.5 rounded-xl md:rounded-full font-semibold transition-all text-xs tracking-tight whitespace-nowrap flex-1 md:flex-none ${
+                    activeTab === key 
+                    ? "bg-[var(--accent)] text-white shadow-md" 
+                    : "text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-primary)]/50"
+                  }`}
                 >
-                  {icon} {label}
+                  {icon} <span className="hidden sm:inline">{label}</span>
                 </button>
               ))}
             </div>
@@ -163,31 +157,22 @@ const Library = ({ isDash = false }) => {
           {novels.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white transition-all duration-300 group shadow-lg shadow-red-500/5 active:scale-95"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-red-500/5 text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 text-xs font-semibold tracking-wide uppercase"
             >
-              <FaTrash
-                size={12}
-                className="group-hover:rotate-12 transition-transform"
-              />
-              <span className="text-[10px] font-black uppercase tracking-widest">
-                Recycle Bin
-              </span>
+              <LuTrash2 size={14} />
+              <span>Clear {activeTab}</span>
             </button>
           )}
         </nav>
 
-        {/* DATA GRID */}
+        {/* --- CONTENT GRID --- */}
         <main className="w-full">
           {!isAuthenticated ? (
-            <div className="flex justify-center py-20">
-              <AuthPrompt />
-            </div>
+            <div className="flex justify-center py-20"> <AuthPrompt /> </div>
           ) : loading ? (
-            <div className="flex justify-center py-20">
-              <Loading activeTab={activeTab} />
-            </div>
+            <div className="flex justify-center py-20"> <Loading activeTab={activeTab} /> </div>
           ) : novels.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 justify-items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 justify-items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
               {novels.map((novel) => (
                 <UniversalCard
                   key={novel._id}
@@ -195,18 +180,14 @@ const Library = ({ isDash = false }) => {
                   showDelete={true}
                   showProgress={activeTab === TABS.HISTORY}
                   onRead={() =>
-                    navigate(
-                      `/novel/${novel._id}/chapter/${novel.lastReadChapter || 1}`,
-                    )
+                    navigate(`/novel/${novel._id}/chapter/${novel.lastReadChapter || 1}`)
                   }
                   onDelete={() => triggerDelete(novel._id)}
                 />
               ))}
             </div>
           ) : (
-            <div className="flex justify-center py-20">
-              <Empty activeTab={activeTab} />
-            </div>
+            <div className="flex justify-center py-20"> <Empty activeTab={activeTab} /> </div>
           )}
         </main>
       </div>

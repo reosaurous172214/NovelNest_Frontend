@@ -48,7 +48,7 @@ export default function NovelDrawer({ novel, isOpen, onClose }) {
               {/* Cover Art Block */}
               <div className="aspect-[2/3] w-full max-w-[280px] mx-auto rounded-xl overflow-hidden border border-[var(--border)] shadow-xl bg-[var(--bg-primary)]">
                  <img 
-                   src={novel.coverImage?.startsWith('http') ? novel.coverImage : `${process.env.REACT_APP_API_URL}/${novel.coverImage}`} 
+                   src={novel.coverImage?.startsWith('http') ? novel.coverImage : `${process.env.REACT_APP_API_URL}${novel.coverImage}`} 
                    alt="" 
                    className="w-full h-full object-cover" 
                    onError={(e) => { e.target.src = "https://via.placeholder.com/300x450?text=No+Cover"; }}

@@ -22,7 +22,7 @@ export default function AdminLayout() {
     const isExternal = user.profilePicture.startsWith('http');
     const imgSrc = isExternal 
       ? user.profilePicture 
-      : `${process.env.REACT_APP_API_URL}/${user.profilePicture}`;
+      : `${process.env.REACT_APP_API_URL}${user.profilePicture}`;
 
     return (
       <img 

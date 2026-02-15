@@ -85,7 +85,15 @@ const AdminRequests = () => {
                     <td className="p-5">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center text-[var(--text-dim)] overflow-hidden">
-                          {req.user?.avatar ? <img src={req.user.avatar} alt="PFP" /> : <FaUserCircle size={20} />}
+                          {req.user?.profilePicture ? <img 
+  src={
+    req.user.profilePicture?.startsWith("http")
+      ? req.user.profilePicture
+      : `${process.env.REACT_APP_API_URL}${req.user.profilePicture}`
+  } 
+  alt="Profile" 
+  className="w-10 h-10 rounded-full object-cover"
+/> : <FaUserCircle size={20} />}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-[var(--text-main)]">{req.user?.username || "Unknown"}</p>

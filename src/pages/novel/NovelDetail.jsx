@@ -16,6 +16,7 @@ import {
   FaBookmark,
   FaLock,
   FaUnlock,
+  FaShoppingCart, // Added for the Buy button
 } from "react-icons/fa";
 import { useAddFavourites } from "../../hooks/useFavourites";
 import { useAddBookmark } from "../../hooks/useBookmarks"; 
@@ -78,7 +79,7 @@ const NovelDetail = () => {
   if (!novel) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
       <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold animate-pulse">Syncing Registry...</p>
+      <p className="text-[10px] text-[var(--accent)] uppercase tracking-[0.3em] font-bold animate-pulse">Loading Novel...</p>
     </div>
   );
 
@@ -98,6 +99,12 @@ const NovelDetail = () => {
       showAlert(`"${novel.title}" ${response?.message || "Bookmarked"}`, "success");
       setShowSaveMenu(false);
     } catch (err) { showAlert("Action failed.", "error"); }
+  };
+
+  const handleBuyNovel = () => {
+    if (!token) return showAlert("Log in required.", "info");
+    showAlert("Processing digital acquisition...", "info");
+    // Add your purchase logic or navigation here
   };
 
   const balancedRounded = "rounded-xl"; 
@@ -153,6 +160,13 @@ const NovelDetail = () => {
                 >
                   <FaPlay size={10} /> Start Reading
                 </Link>
+
+                <button
+                  onClick={handleBuyNovel}
+                  className={`px-8 py-4 ${balancedRounded} font-bold text-white text-[11px] uppercase tracking-widest bg-emerald-600 border border-emerald-500 flex items-center justify-center gap-3 hover:bg-emerald-700 active:scale-95 transition-all shadow-lg`}
+                >
+                  <FaShoppingCart size={10} /> Buy Novel
+                </button>
                 
                 <div className="relative" ref={saveMenuRef}>
                   <button
@@ -178,7 +192,7 @@ const NovelDetail = () => {
           </div>
         </div>
 
-        {/* CONTENT TABS */}
+        {/* ... Rest of the tabs and sections remain exactly the same ... */}
         <div className={`mt-10 overflow-hidden ${glassStyle}`}>
           <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[var(--border)] bg-[var(--bg-primary)]/50">
             {[{ id: "about", label: "Description" }, { id: "toc", label: "Chapters" }, { id: "reviews", label: "Reviews" }, { id: "recommend", label: "Recommended" }].map((tab) => (
@@ -277,6 +291,7 @@ const NovelDetail = () => {
   );
 };
 
+// ... RatingInput and StatBox components remain exactly the same ...
 const RatingInput = ({ novelId, currentRating, token, showAlert, radius }) => {
   const [hover, setHover] = useState(0);
   const [selected, setSelected] = useState(currentRating || 0);

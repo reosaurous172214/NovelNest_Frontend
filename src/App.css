@@ -8,8 +8,10 @@
   --bg-primary: #020202;
   --bg-secondary: #0a0a0a;
   --text-main: #f8fafc;
+  --logo-main: #f1f6fc;
   --text-dim: #64748b;
   --accent: #3b82f6;
+  --laccent: #e8e8e8;
   --accent-glow: rgba(59, 130, 246, 0.5);
   --border: rgba(255, 255, 255, 0.08);
 }
@@ -19,9 +21,11 @@
 .theme-light {
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
-  --text-main: #0f172a;
-  --text-dim: #64748b;
-  --accent: #2563eb;
+  --text-main: #122347;
+  --logo-main: #ffffff;
+  --text-dim: #47576d;
+  --laccent: #ffffff;
+  --accent: #1f4390;
   --accent-glow: rgba(37, 99, 235, 0.2);
   --border: rgba(15, 23, 42, 0.1);
 }
@@ -30,8 +34,10 @@
   --bg-primary: #fdf6e3;
   --bg-secondary: #eee8d5;
   --text-main: #073642;
+  --logo-main: #ecf0f1;
   --text-dim: #586e75;
   --accent: #b58900;
+  --laccent: #e1e7d4;
   --accent-glow: rgba(181, 137, 0, 0.2);
   --border: rgba(7, 54, 66, 0.1);
 }
@@ -40,8 +46,10 @@
   --bg-primary: #fffcf5;
   --bg-secondary: #f7f3e9;
   --text-main: #1a1a1a;
+  --logo-main: #1a1a1a;
   --text-dim: #71717a;
   --accent: #4f46e5;
+  --laccent: #4f46e5;
   --accent-glow: rgba(79, 70, 229, 0.1);
   --border: rgba(0, 0, 0, 0.05);
 }
@@ -50,8 +58,10 @@
   --bg-primary: #f8fafc;
   --bg-secondary: #e2e8f0;
   --text-main: #1e293b;
+  --logo-main: #1e293b;
   --text-dim: #64748b;
   --accent: #0ea5e9;
+  --laccent: #0ea5e9;
   --accent-glow: rgba(14, 165, 233, 0.1);
   --border: rgba(14, 165, 233, 0.1);
 }
@@ -60,8 +70,10 @@
   --bg-primary: #0d0221;
   --bg-secondary: #19043d;
   --text-main: #ffffff;
+  --logo-main: #ffffff;
   --text-dim: #a594f9;
   --accent: #f472b6;
+  --laccent: #f472b6;
   --accent-glow: rgba(244, 114, 182, 0.6);
   --border: rgba(244, 114, 182, 0.2);
 }
@@ -70,8 +82,10 @@
   --bg-primary: #020617;
   --bg-secondary: #06261d;
   --text-main: #ecfdf5;
+  --logo-main: #ecfdf5;
   --text-dim: #6ee7b7;
   --accent: #10b981;
+  --laccent: #10b981;
   --accent-glow: rgba(16, 185, 129, 0.6);
   --border: rgba(16, 185, 129, 0.2);
 }
@@ -203,4 +217,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.02em;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(100vh); opacity: 0.5; }
+  100% { transform: translateY(0); }
+}
+
+.animate-scan {
+  animation: scan 8s linear infinite;
+  /* Optional: makes the line look like a glow */
+  box-shadow: 0 0 10px var(--accent);
 }

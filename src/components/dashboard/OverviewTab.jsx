@@ -1,42 +1,43 @@
 import { 
-  FaBookOpen, FaHistory, FaClock, FaHeart, FaRocket
-  , FaChartLine,  FaTerminal, FaPlay 
-} from "react-icons/fa";
+  LuBookOpen, LuHistory, LuClock, LuHeart, LuRocket, LuPlay 
+} from "react-icons/lu"; 
 import { useNavigate } from "react-router-dom";
 import MetricCard from "./MetricCard";
 import ActivityItem from "./ActivityItem";
+
 const OverviewTab = ({ user, hours, activities, lastRead, loading }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 animate-in fade-in duration-700">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 animate-in fade-in duration-700 font-sans antialiased">
       <div className="lg:col-span-8 space-y-6 md:space-y-8">
         
-        {/* Responsive Metrics Grid: 2 columns on mobile, 4 on desktop */}
+        {/* --- METRICS GRID --- */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-  <MetricCard 
-    icon={<FaBookOpen />} 
-    label="Collection" 
-    value={user?.bookmarks?.length || 0} 
-  />
-  <MetricCard 
-    icon={<FaClock />} 
-    label="Hours" 
-    value={`${hours}h`} 
-  />
-  <MetricCard 
-    icon={<FaHeart />} 
-    label="Favorites" 
-    value={user?.favourites?.length || 0} 
-  />
-  <MetricCard 
-    icon={<FaRocket />} 
-    label="Works" 
-    value="0" 
-  />
-</div>
-        {/* Responsive Featured Card */}
-        <section className="p-5 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-[var(--bg-secondary)] border border-[var(--border)] text-left relative overflow-hidden group min-h-[240px] flex items-center shadow-2xl transition-all duration-500">
+          <MetricCard 
+            icon={<LuBookOpen size={18} />} 
+            label="Collection" 
+            value={user?.bookmarks?.length || 0} 
+          />
+          <MetricCard 
+            icon={<LuClock size={18} />} 
+            label="Hours" 
+            value={`${hours}h`} 
+          />
+          <MetricCard 
+            icon={<LuHeart size={18} />} 
+            label="Favorites" 
+            value={user?.favourites?.length || 0} 
+          />
+          <MetricCard 
+            icon={<LuRocket size={18} />} 
+            label="Works" 
+            value="0" 
+          />
+        </div>
+
+        {/* --- FEATURED CONTINUE READING CARD --- */}
+        <section className="p-6 md:p-10 rounded-[2rem] bg-[var(--bg-secondary)] border border-[var(--border)] text-left relative overflow-hidden group min-h-[240px] flex items-center shadow-xl transition-all duration-500">
           {loading ? (
             <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center w-full animate-pulse">
               <div className="w-28 h-40 md:w-32 md:h-48 bg-[var(--bg-primary)] rounded-2xl" />
@@ -52,67 +53,69 @@ const OverviewTab = ({ user, hours, activities, lastRead, loading }) => {
                     <img 
                       src={lastRead.coverImage || "https://via.placeholder.com/300x450"} 
                       alt="cover" 
-                      className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700" 
+                      className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-all duration-700" 
                     />
                 </div>
-                <div className="flex-1 space-y-3 md:space-y-5 text-center sm:text-left min-w-0 w-full">
-                    <span className="text-[8px] md:text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.3em] md:tracking-[0.4em]">Active Mission</span>
-                    <h2 className="text-xl md:text-4xl font-black uppercase tracking-tighter leading-tight md:leading-none truncate italic">
+                <div className="flex-1 space-y-5 md:space-y-7 text-center sm:text-left min-w-0 w-full">
+                    <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-widest">Current Reading</span>
+                    <h2 className="text-2xl font-semibold  leading-tight truncate">
                       {lastRead.title}
                     </h2>
                     
-                    <div className="space-y-2">
-                      <div className="w-full bg-[var(--bg-primary)] h-1 md:h-1.5 rounded-full overflow-hidden border border-[var(--border)]">
+                    <div className="space-y-3">
+                      <div className="w-full bg-[var(--bg-primary)] h-1.5 rounded-full overflow-hidden border border-[var(--border)]">
                         <div 
                           className="bg-[var(--accent)] h-full transition-all duration-1000 ease-out" 
                           style={{ width: `${(lastRead.lastReadChapter / (lastRead.totalChapters || 100)) * 100}%` }}
                         />
                       </div>
-                      <p className="text-[7px] md:text-[9px] font-black opacity-30 tracking-widest uppercase">
-                        Chapter {lastRead.lastReadChapter} // SYNC: {Math.round((lastRead.lastReadChapter / (lastRead.totalChapters || 100)) * 100)}%
-                      </p>
+                      <div className="flex justify-between items-center text-[10px] font-semibold opacity-60 tracking-wide uppercase">
+                        <span>Chapter {lastRead.lastReadChapter}</span>
+                        <span>{Math.round((lastRead.lastReadChapter / (lastRead.totalChapters || 100)) * 100)}% Complete</span>
+                      </div>
                     </div>
 
                     <button 
                       onClick={() => navigate(`/novel/${lastRead.novelId}/chapter/${lastRead.lastReadChapter}`)}
-                      className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[var(--accent)] text-white px-6 md:px-10 py-3 md:py-4 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-[var(--accent)]/20"
+                      className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[var(--accent)] text-white px-8 py-3.5 rounded-xl text-xs font-semibold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg"
                     >
-                      <FaPlay size={8} /> Resume Reading
+                      <LuPlay size={10} /> Resume
                     </button>
                 </div>
             </div>
           ) : (
-            <div className="w-full text-center py-10 opacity-20 italic flex flex-col items-center gap-4">
-               <FaBookOpen className="text-3xl md:text-4xl" />
-               <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">No local logs detected</p>
+            <div className="w-full text-center py-10 opacity-30 flex flex-col items-center gap-4">
+               <LuBookOpen size={32} />
+               <p className="text-xs font-semibold uppercase tracking-widest">No reading logs detected</p>
             </div>
           )}
         </section>
       </div>
       
-      {/* Activity Sidebar: Spans full width on mobile, 4 columns on desktop */}
+      {/* --- ACTIVITY SIDEBAR --- */}
       <div className="lg:col-span-4">
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 h-full flex flex-col shadow-xl">
-           <h3 className="text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-[var(--border)] pb-4 text-left">
-             <FaHistory className="text-[var(--accent)]"/> Recent Bursts
-           </h3>
-           
-           <div className="space-y-4 md:space-y-5 flex-1 overflow-y-auto max-h-[300px] lg:max-h-[400px] no-scrollbar">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] p-6 h-full flex flex-col shadow-lg">
+            <h3 className="text-sm font-semibold uppercase tracking-wider mb-8 flex items-center gap-2 border-b border-[var(--border)] pb-4 text-left">
+              <LuHistory className="text-[var(--accent)]" size={16}/> Recent History
+            </h3>
+            
+            <div className="space-y-5 flex-1 overflow-y-auto max-h-[350px] lg:max-h-[450px] no-scrollbar">
               {activities.length > 0 ? (
                 activities.slice(0, 6).map((a, i) => <ActivityItem key={a._id || i} activity={a} />)
               ) : (
-                <div className="py-10 text-center opacity-20 text-[9px] font-black uppercase tracking-widest italic">
-                  No Signals Recorded
+                <div className="py-12 text-center opacity-30 text-xs font-semibold tracking-wide uppercase">
+                  No signals found
                 </div>
               )}
-           </div>
-           
-           <button className="mt-6 w-full py-3 md:py-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] text-[9px] font-black uppercase tracking-widest hover:border-[var(--accent)] transition-all">
-             Archive Access
-           </button>
+            </div>
+            
+            <button className="mt-8 w-full py-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] text-[10px] font-semibold uppercase tracking-widest hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
+              Access Full Logs
+            </button>
         </div>
       </div>
     </div>
   );
 };
+
 export default OverviewTab;

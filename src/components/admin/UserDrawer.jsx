@@ -7,7 +7,7 @@ export default function UserDrawer({ user, isOpen, onClose }) {
   const renderAvatar = () => {
     const hasPic = user.profilePicture && typeof user.profilePicture === 'string';
     const isExternal = hasPic && user.profilePicture.startsWith('http');
-    const imgSrc = isExternal ? user.profilePicture : `${process.env.REACT_APP_API_URL}/${user.profilePicture}`;
+    const imgSrc = isExternal ? user.profilePicture : `${process.env.REACT_APP_API_URL}${user.profilePicture}`;
 
     return (
       <div className={`w-24 h-24 rounded-2xl border-2 flex items-center justify-center overflow-hidden bg-[var(--bg-primary)] ${user.isBanned ? 'border-red-500/50 grayscale' : 'border-[var(--accent)]/30'}`}>

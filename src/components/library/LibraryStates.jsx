@@ -10,9 +10,9 @@ export const AuthPrompt = () => (
 );
 
 export const Loading = ({ activeTab }) => (
-    <div className="flex flex-col items-center py-20 text-center">
+    <div className="flex flex-col items-center py-28 text-center">
         <div className="w-8 h-8 border-4 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mb-4" />
-        <span className="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase">Syncing {activeTab}...</span>
+        <span className="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase">Loading {activeTab}...</span>
     </div>
 );
 

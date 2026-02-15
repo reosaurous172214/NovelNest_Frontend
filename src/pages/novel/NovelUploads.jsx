@@ -33,82 +33,81 @@ export default function NovelUploads() {
     fetchNovels();
   }, []);
 
-  // Theme-Consistent Glass Base
-  // Using bg-secondary and border variables ensures it adapts to Light, Dark, Sepia, etc.
-  const glassBase = "bg-[var(--bg-secondary)] border border-[var(--border)] shadow-xl transition-all duration-500";
+  // Reduced rounding and padding for a cleaner, less "gigantic" feel
+  const glassBase = "bg-[var(--bg-secondary)] border border-[var(--border)] shadow-sm transition-all duration-500";
 
   return (
-    <div className="relative min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] pt-28 px-4 sm:px-6 pb-20 overflow-hidden transition-colors duration-500">
+    <div className="relative min-h-screen bg-[var(--bg-primary)] text-[var(--text-main)] pt-24 px-4 sm:px-6 pb-12 transition-colors duration-500 font-sans">
       
-      {/* Background Glow - Adapts to Theme Accent */}
-      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[var(--accent)] opacity-[0.07] blur-[120px] rounded-full pointer-events-none" />
+      {/* Background Glow - Dimmed opacity */}
+      <div className="absolute top-[-5%] right-[-2%] w-[400px] h-[400px] bg-[var(--accent)] opacity-[0.03] blur-[100px] rounded-full pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-5xl mx-auto relative z-10">
         
         {/* --- HEADER --- */}
-        <header className={`flex flex-col md:flex-row items-center justify-between p-8 md:p-12 mb-10 rounded-[2.5rem] ${glassBase}`}>
-          <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-              <FaCloudUploadAlt className="text-[var(--accent)]" size={20} />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--accent)]">Author Console</span>
+        <header className={`flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 mb-6 rounded-2xl ${glassBase}`}>
+          <div className="text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+              <FaCloudUploadAlt className="text-[var(--accent)]" size={16} />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">Author Dashboard</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none text-[var(--text-main)]">
-              Your <span className="text-[var(--accent)]">Manuscripts</span>
+            <h1 className="text-3xl font-bold tracking-tight text-[var(--text-main)]">
+              Your <span className="text-[var(--accent)]">Works</span>
             </h1>
-            <p className="mt-4 text-[var(--text-dim)] text-[10px] font-bold uppercase tracking-widest opacity-70">
-              Total Publications: {novels.length}
+            <p className="mt-1 text-[var(--text-dim)] text-xs font-medium">
+              You have {novels.length} published novels and drafts.
             </p>
           </div>
 
           <button
             onClick={() => navigate("/novel/create")}
-            className="mt-8 md:mt-0 flex items-center gap-4 bg-[var(--accent)] text-white px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:brightness-110 hover:scale-[1.02] transition-all active:scale-95 shadow-lg shadow-[var(--accent-glow)]"
+            className="mt-6 sm:mt-0 flex items-center gap-2 bg-[var(--accent)] text-white px-6 py-3 rounded-xl font-bold text-xs hover:brightness-105 active:scale-95 shadow-md transition-all"
           >
-            <FaPlus /> Start New Project
+            <FaPlus size={12} /> New Novel
           </button>
         </header>
 
         {/* --- LIST AREA --- */}
-        <div className={`rounded-[2.5rem] p-6 md:p-10 ${glassBase}`}>
-          <div className="flex items-center gap-6 mb-10 px-4">
-            <h2 className="text-xl font-black uppercase italic tracking-tighter text-[var(--text-main)] whitespace-nowrap">
-              Archive Management
+        <div className={`rounded-2xl p-4 sm:p-6 ${glassBase}`}>
+          <div className="flex items-center gap-4 mb-6 px-2">
+            <h2 className="text-sm font-bold text-[var(--text-main)] uppercase tracking-wide whitespace-nowrap">
+              Manage Stories
             </h2>
-            <div className="h-px w-full bg-[var(--border)] opacity-50" />
+            <div className="h-px w-full bg-[var(--border)] opacity-20" />
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {loading ? (
-              <div className="py-24 text-center">
-                <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-                <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">
-                  Fetching Data...
+              <div className="py-20 text-center">
+                <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest">
+                  Loading...
                 </p>
               </div>
             ) : novels.length === 0 ? (
-              <div className="py-24 text-center border-2 border-dashed border-[var(--border)] rounded-[2rem] bg-[var(--bg-primary)]/50">
-                <FaFeather className="mx-auto mb-4 text-[var(--text-dim)] opacity-20" size={40} />
-                <p className="text-[11px] text-[var(--text-dim)] mb-8 font-bold uppercase tracking-widest">
-                  Your archive is currently empty
+              <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-xl bg-[var(--bg-primary)]/30">
+                <FaFeather className="mx-auto mb-3 text-[var(--text-dim)] opacity-20" size={28} />
+                <p className="text-xs text-[var(--text-dim)] mb-6 font-semibold">
+                  You haven't uploaded anything yet.
                 </p>
                 <button
                   onClick={() => navigate("/novel/create")}
-                  className="px-8 py-3 rounded-xl border border-[var(--accent)] text-[var(--accent)] font-black text-[10px] tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all"
+                  className="px-5 py-2 rounded-lg border border-[var(--accent)] text-[var(--accent)] font-bold text-[10px] hover:bg-[var(--accent)] hover:text-white transition-all"
                 >
-                  Create Your First Entry
+                  Start Writing
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-col gap-3">
                 {novels.map((novel) => (
                   <div
                     key={novel._id}
-                    className="group relative bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[1.8rem] overflow-hidden hover:border-[var(--accent)] transition-all duration-300 shadow-sm hover:shadow-md"
+                    className="group bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl overflow-hidden hover:border-[var(--accent)]/40 transition-all duration-300"
                   >
-                    <div className="p-4 flex flex-col lg:flex-row items-center justify-between gap-6">
+                    <div className="p-3 flex flex-col md:flex-row items-center justify-between gap-4">
                       
                       {/* Novel Information Slip */}
-                      <div className="flex-1 w-full">
+                      <div className="flex-1 w-full scale-95 origin-left">
                         <NovelRow
                           novel={novel}
                           showActions={false}
@@ -116,19 +115,19 @@ export default function NovelUploads() {
                       </div>
 
                       {/* Control Panel */}
-                      <div className="flex items-center gap-2 w-full lg:w-auto">
+                      <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
                         <button
                           onClick={() => navigate(`/novel/edit/${novel._id}`)}
-                          className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all border border-[var(--accent)]/20"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--accent)]/5 text-[var(--accent)] rounded-lg font-bold text-[10px] uppercase border border-[var(--accent)]/10 hover:bg-[var(--accent)] hover:text-white transition-all"
                         >
-                          <FaEdit size={12} /> Edit Chapters
+                          <FaEdit size={12} /> Edit
                         </button>
                         
                         <button
                           onClick={() => navigate(`/novel/${novel._id}`)}
-                          className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-dim)] rounded-xl font-black text-[10px] uppercase tracking-widest hover:text-[var(--text-main)] hover:border-[var(--text-dim)] transition-all"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-dim)] rounded-lg font-bold text-[10px] uppercase hover:text-[var(--text-main)] transition-all"
                         >
-                          <FaBookOpen size={12} /> Preview
+                          <FaBookOpen size={12} /> View
                         </button>
                       </div>
                     </div>

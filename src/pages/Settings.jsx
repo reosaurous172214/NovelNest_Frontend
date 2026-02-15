@@ -56,8 +56,6 @@ export default function Settings({ currentTheme = "default", setTheme }) {
         
         {/* --- SIDEBAR --- */}
         <aside className="w-full lg:w-72 space-y-6">
-          
-          
           <nav className="space-y-4">
             <SettingsTab 
               icon={<FaPalette />} label="Visuals" active={activeSection === "interface"} 
@@ -77,8 +75,9 @@ export default function Settings({ currentTheme = "default", setTheme }) {
             {activeSection === "interface" && (
               <div className="space-y-10">
                 <section>
-                  <h2 className="text-xl font-black uppercase italic tracking-tight mb-8 flex items-center gap-4">
-                    <div className="w-1 h-6 bg-[var(--accent)]"></div> Visual DNA
+                  {/* Changed font-black italic to font-semibold */}
+                  <h2 className="text-xl font-semibold uppercase tracking-tight mb-8 flex items-center gap-4">
+                    <div className="w-1 h-6 bg-[var(--accent)] rounded-full"></div> Visual Interface
                   </h2>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -86,15 +85,13 @@ export default function Settings({ currentTheme = "default", setTheme }) {
                       <button
                         key={t.id}
                         onClick={() => setTheme(t.id)}
-                        // Cards use their own theme background, only border changes based on global currentTheme
                         style={{ backgroundColor: t.color }}
                         className={`p-6 rounded-[2.5rem] border-2 transition-all text-left relative group overflow-hidden ${
                           currentTheme === t.id 
-                          ? "border-[var(--accent)] shadow-lg shadow-[var(--accent-glow)] scale-[1.02]" 
-                          : "border-[var(--border)] hover:border-[var(--accent)]/40"
+                          ? "border-[var(--accent)] shadow-lg scale-[1.02]" 
+                          : "border-transparent hover:border-[var(--accent)]/40"
                         }`}
                       >
-                        {/* Content inside card uses specific theme text color */}
                         <div className="flex justify-between items-start mb-4 relative z-10">
                           <div style={{ color: t.text }} className="text-xl opacity-80 group-hover:opacity-100 transition-opacity">
                             {t.icon}
@@ -104,14 +101,15 @@ export default function Settings({ currentTheme = "default", setTheme }) {
                           )}
                         </div>
 
-                        <h4 style={{ color: t.text }} className="font-black text-[11px] uppercase tracking-widest mb-1 relative z-10">
+                        {/* Changed font-black to font-semibold */}
+                        <h4 style={{ color: t.text }} className="font-semibold text-[13px] uppercase tracking-wide mb-1 relative z-10">
                           {t.label}
                         </h4>
-                        <p style={{ color: t.text }} className="text-[10px] opacity-60 leading-relaxed relative z-10">
+                        {/* Changed text-[10px] to text-xs and ensured medium weight */}
+                        <p style={{ color: t.text }} className="text-xs font-medium opacity-60 leading-relaxed relative z-10">
                           {t.desc}
                         </p>
 
-                        {/* Subtle glass overlay for depth */}
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
                       </button>
                     ))}
@@ -119,13 +117,14 @@ export default function Settings({ currentTheme = "default", setTheme }) {
                 </section>
 
                 <section className="pt-10 border-t border-[var(--border)] flex flex-col md:flex-row items-center gap-8">
-                   <div className="w-20 h-20 rounded-3xl bg-[var(--accent)] shadow-2xl shadow-[var(--accent-glow)] animate-pulse flex items-center justify-center">
+                   <div className="w-20 h-20 rounded-3xl bg-[var(--accent)] shadow-2xl flex items-center justify-center">
                       <FaCheckCircle className="text-white text-2xl" />
                    </div>
                    <div className="flex-1 text-center md:text-left">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent)] mb-2">Protocol Active</h4>
-                      <p className="text-xs text-[var(--text-dim)] leading-relaxed max-w-md">
-                        Your interface is currently rendering the <span className="text-[var(--text-main)] font-bold">{(currentTheme || 'default').toUpperCase()}</span> environment. This changes all backgrounds, text contrast, and glow signatures site-wide.
+                      {/* Changed font-black to font-semibold */}
+                      <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)] mb-2">Protocol Active</h4>
+                      <p className="text-sm text-[var(--text-dim)] font-medium leading-relaxed max-w-md">
+                        Your interface is currently rendering the <span className="text-[var(--text-main)] font-semibold">{(currentTheme || 'default')}</span> environment. This updates all system signatures site-wide.
                       </p>
                    </div>
                 </section>
@@ -133,9 +132,9 @@ export default function Settings({ currentTheme = "default", setTheme }) {
             )}
 
             {activeSection === "security" && (
-              <div className="py-20 text-center opacity-30">
-                <FaShieldAlt size={48} className="mx-auto mb-6 text-[var(--accent)]" />
-                <p className="font-mono text-xs uppercase tracking-[0.4em]">Encryption Modules Stable</p>
+              <div className="py-24 text-center">
+                <FaShieldAlt size={48} className="mx-auto mb-6 text-[var(--accent)] opacity-20" />
+                <p className="font-medium text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">Encryption Modules Active</p>
               </div>
             )}
           </div>
@@ -150,11 +149,12 @@ const SettingsTab = ({ icon, label, active, onClick }) => (
     onClick={onClick}
     className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 border ${
       active 
-      ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-xl shadow-[var(--accent-glow)] scale-[1.02]" 
+      ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-lg scale-[1.02]" 
       : "bg-[var(--bg-secondary)] text-[var(--text-dim)] border-[var(--border)] hover:border-[var(--accent)]/30"
     }`}
   >
     <span className={active ? "text-white" : "text-[var(--accent)]"}>{icon}</span>
-    <span className="text-[11px] font-black uppercase tracking-[0.2em]">{label}</span>
+    {/* Changed font-black to font-semibold */}
+    <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
   </button>
 );

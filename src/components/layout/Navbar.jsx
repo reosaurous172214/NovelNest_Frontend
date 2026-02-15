@@ -3,7 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   RiHome4Line, RiBook3Line, RiLogoutBoxRLine, RiDashboardLine, RiMenu4Line, RiCloseLine, 
-  RiSearchLine, RiArrowRightSLine, RiUserLine, RiSettings4Line, RiShieldFlashLine, RiWallet3Line, RiBookmarkLine
+  RiSearchLine, RiArrowRightSLine, RiUserLine, RiSettings4Line, RiShieldFlashLine, RiWallet3Line, RiBookmarkLine,
+  RiFileUploadLine,
+  RiVipCrownLine // Icon for Subscription
 } from "react-icons/ri";
 import Logo from "./Logo";
 import { useAuth } from "../../context/AuthContext";
@@ -29,6 +31,8 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
   const profileRef = useRef(null);
   const searchRef = useRef(null);
   const { user } = useAuth();
+
+  const isAuthorOrAdmin = user?.role === 'author' || user?.role === 'admin';
 
   const getImageUrl = (path) => {
     if (!path) return "";
@@ -180,6 +184,10 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                 <NavItem to="/" icon={<RiHome4Line />} label="Home" active={location.pathname === "/"} />
                 <NavItem to="/novels" icon={<RiBook3Line />} label="Explore" active={location.pathname === "/novels"} />
                 <NavItem to="/library" icon={<RiBookmarkLine />} label="Library" active={location.pathname === "/library"} />
+                
+                {isAuthorOrAdmin && (
+                  <NavItem to="/novel/author/me" icon={<RiFileUploadLine />} label="Uploads" active={location.pathname === "/novel/author/me"} />
+                )}
               </div>
 
               <div className="h-6 w-[1px] bg-[var(--border)] hidden md:block mx-1"></div>
@@ -207,8 +215,15 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                           <DropdownItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" />
                           <DropdownItem to="/profile" icon={<RiUserLine />} label="My Profile" />
                           <DropdownItem to="/library" icon={<RiBookmarkLine />} label="My Library" />
+                          
+                          {/* Desktop Dropdown Additions */}
+                          <DropdownItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" />
+                          
                           <DropdownItem to="/settings" icon={<RiSettings4Line />} label="Settings" />
                           <DropdownItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" />
+                          
+                          {isAuthorOrAdmin && <DropdownItem to="/novel/author/me" icon={<RiFileUploadLine />} label="My Uploads" />}
+                          
                           {user?.role === 'admin' && <DropdownItem to="/admin" icon={<RiShieldFlashLine />} label="Admin Panel" />}
                           <div className="h-[1px] bg-[var(--border)] my-1 mx-2 opacity-50"></div>
                           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] font-semibold uppercase tracking-wider">
@@ -271,12 +286,21 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
             <MobileSidebarItem to="/" icon={<RiHome4Line />} label="Home" onClick={() => setMenuOpen(false)} active={location.pathname === "/"} />
             <MobileSidebarItem to="/novels" icon={<RiBook3Line />} label="Explore" onClick={() => setMenuOpen(false)} />
             <MobileSidebarItem to="/library" icon={<RiBookmarkLine />} label="Library" onClick={() => setMenuOpen(false)} />
+            
+            {isAuthorOrAdmin && (
+              <MobileSidebarItem to="/novel/author/me" icon={<RiFileUploadLine />} label="My Uploads" onClick={() => setMenuOpen(false)} active={location.pathname === "/novel/author/me"} />
+            )}
           </div>
 
           {isAuthenticated && (
             <div className="py-2 text-left">
               <p className="px-4 text-[9px] font-semibold text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 opacity-60">System</p>
               <MobileSidebarItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" onClick={() => setMenuOpen(false)} />
+              
+              {/* Mobile Sidebar Additions */}
+              <MobileSidebarItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" onClick={() => setMenuOpen(false)} />
+              <MobileSidebarItem to="/settings" icon={<RiSettings4Line />} label="Settings" onClick={() => setMenuOpen(false)} />
+              
               <MobileSidebarItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" onClick={() => setMenuOpen(false)} />
               {user?.role === 'admin' && <MobileSidebarItem to="/admin" icon={<RiShieldFlashLine />} label="Admin Panel" onClick={() => setMenuOpen(false)} />}
             </div>

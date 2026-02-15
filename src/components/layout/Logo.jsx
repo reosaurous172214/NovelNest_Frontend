@@ -48,14 +48,14 @@ const NovelHubLogo = () => {
 
       <path
         d="M38 24V64"
-        stroke="var(--accent)"
-        strokeWidth="2"
+        stroke="var(--laccent)"
+        strokeWidth="4"
         opacity="0.35"
       />
 
       <path
         d="M31 40L38 34L45 40"
-        stroke="var(--text-main)"
+        stroke="var(--logo-main)"
         strokeWidth="2.2"
         strokeLinecap="round"
       />

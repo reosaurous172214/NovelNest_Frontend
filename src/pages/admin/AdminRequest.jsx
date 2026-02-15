@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import { 
   LuExternalLink, 
   LuSearch, 
@@ -7,17 +8,20 @@ import {
   LuShieldCheck, 
   LuUserX, 
   LuRefreshCw,
-  LuLayoutDashboard
+  LuLayoutDashboard,
+  LuTrash2
 } from "react-icons/lu"; 
 import { fetchAllUsers, banUser, liftban } from "../../api/apiAdmin";
 import { useAlert } from "../../context/AlertContext";
-import { useAuth } from "../../context/AuthContext"; // Import AuthContext
+import { useAuth } from "../../context/AuthContext"; 
+import { getHeaders } from "../../getItems/getAuthItems";
 import UserDrawer from "../../components/admin/UserDrawer.jsx";
 import WalletDisplay from "../../components/balance/WalletDisplay.jsx";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
-export default function AdminRequests() {
+export default function UserRegistry() {
   const { showAlert } = useAlert();
-  const { wallet: adminWallet } = useAuth(); // Access Admin's own wallet from context
+  const { wallet: adminWallet } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -26,12 +30,11 @@ export default function AdminRequests() {
   const [drawerUser, setDrawerUser] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showBanModal, setShowBanModal] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [banReason, setBanReason] = useState("");
 
-  useEffect(() => { fetchUsers(); }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchAllUsers();
@@ -41,7 +44,9 @@ export default function AdminRequests() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const filteredUsers = users.filter((u) =>
     u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,19 +58,14 @@ export default function AdminRequests() {
     setIsDrawerOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setShowBanModal(false);
-    setSelectedUser(null);
-    setBanReason("");
-  };
-
   const handleConfirmBan = async () => {
     if (!banReason.trim()) return showAlert("Please provide a reason", "error");
     try {
       setActionLoading(true);
       const message = await banUser(selectedUser._id, banReason);
       showAlert(message || "User suspended", "success");
-      handleCloseModal();
+      setShowBanModal(false);
+      setBanReason("");
       fetchUsers(); 
     } catch (err) {
       showAlert(err.message || "Action failed", "error");
@@ -74,192 +74,216 @@ export default function AdminRequests() {
     }
   };
 
-  const handleLiftBan = async (user) => {
+  const handleLiftBan = async (userId) => {
     try {
       setActionLoading(true);
-      setSelectedUser(user);
-      await liftban(user._id);
-      showAlert("User access restored", "success");
+      await liftban(userId);
+      showAlert("Access restored", "success");
       fetchUsers();
     } catch (err) {
       showAlert("Failed to lift ban", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleteModalOpen(false);
+    try {
+      setActionLoading(true);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/admin/delete/users/${selectedUser._id}`, getHeaders());
+      showAlert("User permanently removed", "success");
+      fetchUsers();
+    } catch (err) {
+      showAlert("Failed to delete member", "error");
     } finally {
       setActionLoading(false);
       setSelectedUser(null);
     }
   };
 
-  const renderProfilePic = (u) => {
+  const renderAvatar = (u) => {
     const hasPic = u.profilePicture && typeof u.profilePicture === 'string';
     const imgSrc = hasPic && u.profilePicture.startsWith('http') 
       ? u.profilePicture 
-      : `${process.env.REACT_APP_API_URL}/${u.profilePicture}`;
+      : `${process.env.REACT_APP_API_URL}${u.profilePicture}`;
 
     return (
-      <div className={`relative w-10 h-10 rounded-lg overflow-hidden border flex items-center justify-center transition-all ${u.isBanned ? 'grayscale opacity-50' : 'border-[var(--border)] shadow-sm'}`}>
+      <div className={`w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${u.isBanned ? 'grayscale border-red-500/20' : 'border-[var(--border)]'}`}>
         {hasPic ? (
-          <img src={imgSrc} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-        ) : null}
-        <div className={`${hasPic ? 'hidden' : 'flex'} items-center justify-center bg-[var(--bg-primary)] text-[var(--text-dim)] w-full h-full`}>
-          <LuUser size={18} />
-        </div>
+          <img src={imgSrc} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-[var(--bg-primary)] flex items-center justify-center text-[var(--text-dim)]">
+            <LuUser size={20} />
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="p-8 bg-[var(--bg-primary)] min-h-screen font-sans text-[var(--text-main)] transition-colors duration-500">
+    <div className="p-6 md:p-10 bg-[var(--bg-primary)] min-h-screen font-sans text-[var(--text-main)]">
       
-      {/* HEADER & SYSTEM STATS */}
+      {/* HEADER SECTION */}
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
-          <h1 className="text-2xl font-black tracking-tight flex items-center gap-3">
-            <LuLayoutDashboard className="text-[var(--accent)]" /> User Registry
-          </h1>
-          <p className="text-[var(--text-dim)] text-xs uppercase tracking-widest font-bold mt-1">
-            System Administrative Control
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">User Registry</h1>
+          <p className="text-[var(--text-dim)] text-sm mt-1">Manage and monitor community members.</p>
         </div>
 
-        {/* Admin's own wallet from AuthContext */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] px-6 py-3 rounded-2xl flex items-center gap-4 shadow-xl">
-           <div>
-              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-tighter">System Reserve</p>
-              <div className="font-mono font-bold text-sm">
-                <WalletDisplay balance={adminWallet?.balance || 0} size={14} />
-              </div>
-           </div>
-        </div>
-        
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-grow md:flex-grow-0">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-grow md:w-64">
             <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" size={16} />
             <input 
               type="text" 
               placeholder="Search members..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-64 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-10 pr-4 text-sm outline-none focus:border-[var(--accent)] transition-all shadow-inner" 
+              className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[var(--accent)] transition-all" 
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-xs font-bold uppercase text-[var(--text-dim)] hover:text-[var(--accent)] transition-all">
-            <LuFilter size={14} /> Filter
+          
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] px-5 py-2 rounded-2xl flex items-center gap-3 shadow-sm">
+             <span className="text-[10px] font-bold text-[var(--text-dim)] uppercase">System Reserve</span>
+             <WalletDisplay balance={adminWallet?.balance || 0} size={14} />
+          </div>
+
+          <button onClick={fetchUsers} className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-dim)] hover:text-[var(--accent)] transition-all active:scale-95 shadow-sm">
+            <LuRefreshCw size={18} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
 
-      {/* REGISTRY TABLE */}
-      <div className="max-w-7xl mx-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] shadow-2xl overflow-hidden backdrop-blur-md">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[var(--bg-primary)]/50 border-b border-[var(--border)]">
-                <th className="px-6 py-5 text-[10px] uppercase font-black tracking-widest text-[var(--text-dim)]">Member Identity</th>
-                <th className="px-6 py-5 text-[10px] uppercase font-black tracking-widest text-[var(--text-dim)]">Role</th>
-                <th className="px-6 py-5 text-[10px] uppercase font-black tracking-widest text-[var(--text-dim)]">Status</th>
-                <th className="px-6 py-5 text-[10px] uppercase font-black tracking-widest text-[var(--text-dim)]">NC Balance</th>
-                <th className="px-6 py-5 text-[10px] uppercase font-black tracking-widest text-[var(--text-dim)] text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)] text-xs">
-              {loading ? (
-                [...Array(6)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan="5" className="px-6 py-6"><div className="h-12 bg-[var(--bg-primary)] rounded-xl w-full"></div></td>
-                  </tr>
-                ))
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((u) => (
-                  <tr key={u._id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        {renderProfilePic(u)}
-                        <div>
-                          <div className={`text-sm font-black ${u.isBanned ? 'text-[var(--text-dim)] line-through' : 'text-[var(--text-main)]'}`}>{u.username}</div>
-                          <div className="text-[10px] text-[var(--text-dim)] font-mono">{u.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="px-2 py-1 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] text-[9px] font-black uppercase tracking-tighter">{u.role}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full shadow-sm ${u.isBanned ? 'bg-red-500' : 'bg-emerald-500 shadow-emerald-500/20 animate-pulse'}`} />
-                        <span className={`font-bold uppercase text-[10px] ${u.isBanned ? 'text-red-500' : 'text-emerald-500'}`}>
-                          {u.isBanned ? 'Suspended' : 'Active'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-mono font-black text-sm">
-                        {/* Pulling specific user's wallet balance */}
-                        <WalletDisplay balance={u.wallet?.balance || 0} size={13} />
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex justify-center items-center gap-2">
-                        <button onClick={() => handleOpenDrawer(u)} className="p-2.5 text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-primary)] rounded-xl transition-all shadow-sm">
-                          <LuExternalLink size={18} />
-                        </button>
-                        {u.isBanned ? (
-                          <button onClick={() => handleLiftBan(u)} disabled={actionLoading} className="p-2.5 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-all">
-                            {actionLoading && selectedUser?._id === u._id ? <LuRefreshCw className="animate-spin" size={18} /> : <LuShieldCheck size={18} />}
-                          </button>
-                        ) : (
-                          <button onClick={() => { setSelectedUser(u); setShowBanModal(true); }} className="p-2.5 text-[var(--text-dim)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
-                            <LuUserX size={18} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-24 text-center text-[var(--text-dim)] uppercase tracking-widest text-xs font-bold">
-                    No registry matches found for "{searchTerm}"
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* MEMBER LIST (ROW STYLE) */}
+      <div className="max-w-7xl mx-auto space-y-3">
+        {loading ? (
+          [...Array(6)].map((_, i) => (
+            <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] animate-pulse opacity-50"></div>
+          ))
+        ) : filteredUsers.length > 0 ? (
+          filteredUsers.map((u) => (
+            <div 
+              key={u._id} 
+              className="group flex flex-col md:flex-row items-center justify-between bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-4 transition-all hover:border-[var(--accent)] hover:translate-x-1 shadow-sm gap-4"
+            >
+              {/* Identity Section */}
+              <div className="flex items-center gap-4 min-w-[300px] w-full md:w-auto">
+                {renderAvatar(u)}
+                <div className="overflow-hidden">
+                  <h3 className="font-bold text-base leading-tight flex items-center gap-2">
+                    {u.username}
+                    <span className="px-1.5 py-0.5 bg-[var(--bg-primary)] text-[8px] font-black rounded border border-[var(--border)] uppercase opacity-70">
+                      {u.role}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-[var(--text-dim)] truncate">{u.email}</p>
+                </div>
+              </div>
+
+              {/* Stats Section */}
+              <div className="flex flex-1 items-center justify-between md:justify-around w-full max-w-xl">
+                <div className="text-center">
+                  <p className="text-[9px] text-[var(--text-dim)] uppercase font-bold mb-1">Status</p>
+                  <div className="flex items-center gap-1.5 justify-center">
+                    <div className={`w-1.5 h-1.5 rounded-full ${u.isBanned ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
+                    <span className={`text-[10px] font-bold uppercase ${u.isBanned ? 'text-red-500' : 'text-emerald-500'}`}>
+                      {u.isBanned ? 'Suspended' : 'Active'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-[9px] text-[var(--text-dim)] uppercase font-bold mb-1">NC Balance</p>
+                  <div className="font-mono">
+                    <WalletDisplay balance={u.wallet?.balance || 0} size={12} />
+                  </div>
+                </div>
+
+                <div className="hidden lg:block text-center">
+                   <p className="text-[9px] text-[var(--text-dim)] uppercase font-bold mb-1">Joined</p>
+                   <span className="text-[10px] font-medium text-[var(--text-dim)]">
+                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                   </span>
+                </div>
+              </div>
+
+              {/* Action Cluster */}
+              <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                <button 
+                  onClick={() => handleOpenDrawer(u)} 
+                  className="p-2.5 text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-primary)] rounded-xl transition-all border border-transparent hover:border-[var(--border)]"
+                  title="View Details"
+                >
+                  <LuExternalLink size={18} />
+                </button>
+                
+                {u.isBanned ? (
+                  <button 
+                    onClick={() => handleLiftBan(u._id)} 
+                    className="p-2.5 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/10"
+                    title="Lift Suspension"
+                  >
+                    <LuShieldCheck size={18} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => { setSelectedUser(u); setShowBanModal(true); }} 
+                    className="p-2.5 text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all border border-rose-500/10"
+                    title="Suspend User"
+                  >
+                    <LuUserX size={18} />
+                  </button>
+                )}
+
+                <button 
+                  onClick={() => { setSelectedUser(u); setIsDeleteModalOpen(true); }} 
+                  className="p-2.5 text-[var(--text-dim)] bg-gray-500/5 hover:bg-black hover:text-white rounded-xl transition-all border border-gray-500/10"
+                  title="Delete User"
+                >
+                  <LuTrash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-20 text-center bg-[var(--bg-secondary)] border border-dashed border-[var(--border)] rounded-[2.5rem]">
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-dim)]">No matches found</p>
+          </div>
+        )}
       </div>
 
       <UserDrawer user={drawerUser} isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
       
       {/* SUSPENSION MODAL */}
       {showBanModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[var(--bg-secondary)] rounded-[2.5rem] shadow-2xl border border-[var(--border)] overflow-hidden">
-            <div className="p-8">
-              <div className="flex items-center gap-5 mb-8">
-                <div className="w-14 h-14 flex items-center justify-center bg-red-500/10 text-red-500 rounded-2xl shadow-inner">
-                  <LuUserX size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black">Restrict Access</h3>
-                  <p className="text-[10px] text-red-500 uppercase tracking-widest font-black">Official Action Required</p>
-                </div>
-              </div>
-              <p className="text-sm text-[var(--text-dim)] mb-6">
-                Suspending <span className="font-black text-[var(--text-main)]">@{selectedUser?.username}</span> will revoke all reading and financial permissions immediately.
-              </p>
-              <textarea
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-5 text-sm outline-none focus:border-red-500 transition-all h-32 resize-none text-[var(--text-main)] shadow-inner"
-                placeholder="Detail the violation (e.g., policy breach, fraudulent activity)..."
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-              />
-            </div>
-            <div className="p-6 bg-[var(--bg-primary)]/50 border-t border-[var(--border)] flex gap-4">
-              <button onClick={handleCloseModal} className="flex-1 px-6 py-4 text-xs font-black uppercase text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">Abort</button>
-              <button onClick={handleConfirmBan} disabled={actionLoading} className="flex-1 px-6 py-4 bg-red-600 text-white text-xs font-black uppercase rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 active:scale-95 disabled:opacity-50 transition-all">Confirm Suspension</button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-[var(--bg-secondary)] rounded-[2.5rem] shadow-2xl border border-[var(--border)] p-8">
+            <h3 className="text-xl font-bold mb-2 text-red-500">Suspend Access</h3>
+            <p className="text-sm text-[var(--text-dim)] mb-6">A reason is required for administrative audit logs.</p>
+            <textarea
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-4 text-sm outline-none focus:border-red-500 transition-all h-32 resize-none mb-6 text-[var(--text-main)]"
+              placeholder="Explain the reason for suspension..."
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+            />
+            <div className="flex gap-4">
+              <button onClick={() => setShowBanModal(false)} className="flex-1 py-4 text-sm font-bold text-[var(--text-dim)] hover:text-[var(--text-main)]">Cancel</button>
+              <button onClick={handleConfirmBan} disabled={actionLoading} className="flex-1 py-4 bg-red-600 text-white text-sm font-bold rounded-2xl hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-600/20">Suspend</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* DELETE CONFIRMATION */}
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Member"
+        message={`Are you sure you want to permanently delete @${selectedUser?.username}? This will erase all their associated data.`}
+        confirmText="Erase Data"
+        type="danger"
+      />
     </div>
   );
 }
