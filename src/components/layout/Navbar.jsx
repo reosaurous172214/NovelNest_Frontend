@@ -128,10 +128,14 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
         }
       `}</style>
 
-      <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 antialiased ${show ? "translate-y-0" : "-translate-y-full"} ${scrolled ? "pt-2" : "pt-4"}`}>
-        <div className={`mx-auto px-4 w-full transition-all duration-500 ${scrolled ? "max-w-[95%]" : "max-w-[98%]"}`}>
+      {/* Changed pt-4 to md:pt-4 and pt-0 on mobile for full bleed feel */}
+      <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 antialiased ${show ? "translate-y-0" : "-translate-y-full"} ${scrolled ? "pt-0 md:pt-2" : "pt-0 md:pt-4"}`}>
+        
+        {/* Container: Changed max-w classes to be full width on mobile (max-w-full) */}
+        <div className={`mx-auto w-full transition-all duration-500 ${scrolled ? "max-w-full md:max-w-[95%] px-0 md:px-4" : "max-w-full md:max-w-[98%] px-0 md:px-4"}`}>
           
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] shadow-lg rounded-[2rem] px-4 md:px-8 py-2.5 flex items-center justify-between backdrop-blur-3xl relative h-[65px]">
+          {/* Main Bar: Removed rounded corners on mobile for full-width flush look */}
+          <div className="bg-[var(--bg-secondary)] border-b md:border border-[var(--border)] shadow-lg rounded-none md:rounded-[2rem] px-4 md:px-8 py-2.5 flex items-center justify-between backdrop-blur-3xl relative h-[65px]">
             
             {!mobileSearchActive && (
               <Link to="/" className="shrink-0 scale-90 md:scale-100 transition-transform active:scale-95">
@@ -144,7 +148,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               ref={searchRef}
               className={`
                 ${mobileSearchActive 
-                  ? "absolute inset-x-3 inset-y-2 flex items-center bg-[var(--bg-secondary)] rounded-[1.5rem] z-[110] px-2" 
+                  ? "absolute inset-x-0 inset-y-0 flex items-center bg-[var(--bg-secondary)] z-[110] px-4" 
                   : "hidden lg:flex flex-1 max-w-xl mx-6 relative"}
               `}
             >
@@ -173,7 +177,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
 
               {/* SEARCH RESULTS DROPDOWN */}
               {searchOpen && (
-                <div className="absolute top-[115%] left-0 right-0 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden z-[110] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-[105%] left-0 right-0 md:left-0 md:right-0 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-b-2xl md:rounded-2xl shadow-2xl overflow-hidden z-[110] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-2 max-h-[400px] overflow-y-auto no-scrollbar">
                     {searchResults.length > 0 ? (
                       searchResults.map((novel) => (
@@ -209,7 +213,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               <div className="h-6 w-[1px] bg-[var(--border)] hidden md:block mx-1"></div>
 
               <button className="lg:hidden p-2 text-[var(--text-main)] hover:bg-[var(--bg-primary)] rounded-xl transition-all" onClick={() => setMobileSearchActive(true)}>
-                <RiSearchLine size={18} />
+                <RiSearchLine size={20} />
               </button>
 
               {isAuthenticated ? (
@@ -226,8 +230,6 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                         ) : (
                           <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm ${isPremium ? 'bg-yellow-500' : 'bg-[var(--accent)]'}`}>{userInitial}</div>
                         )}
-                        
-                        {/* Premium Crown Badge Overlay */}
                         {isPremium && (
                           <div className="absolute -top-1.5 -right-1.5 bg-yellow-500 text-black rounded-full p-0.5 shadow-sm border border-[var(--bg-secondary)]">
                             <RiVipCrownLine size={8} />
@@ -243,14 +245,10 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                           <DropdownItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" />
                           <DropdownItem to="/profile" icon={<RiUserLine />} label="My Profile" />
                           <DropdownItem to="/library" icon={<RiBookmarkLine />} label="My Library" />
-                          
                           <DropdownItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" active={isPremium} />
-                          
                           <DropdownItem to="/settings" icon={<RiSettings4Line />} label="Settings" />
                           <DropdownItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" />
-                          
                           {isAuthorOrAdmin && <DropdownItem to="/novel/author/me" icon={<RiFileUploadLine />} label="My Uploads" />}
-                          
                           {user?.role === 'admin' && <DropdownItem to="/admin" icon={<RiShieldFlashLine />} label="Admin Panel" />}
                           <div className="h-[1px] bg-[var(--border)] my-1 mx-2 opacity-50"></div>
                           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] font-semibold uppercase tracking-wider">
@@ -268,8 +266,9 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                 </div>
               )}
 
+              {/* Mobile Menu Trigger */}
               <button className="md:hidden p-2.5 rounded-xl bg-[var(--bg-primary)] text-[var(--text-main)] border border-[var(--border)] transition-colors active:bg-[var(--bg-secondary)]" onClick={() => setMenuOpen(true)}>
-                <RiMenu4Line size={18} />
+                <RiMenu4Line size={20} />
               </button>
             </div>
           </div>
@@ -320,8 +319,8 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
           <div className="py-2 text-left">
             <p className="px-4 text-[9px] font-semibold text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 opacity-60">Navigation</p>
             <MobileSidebarItem to="/" icon={<RiHome4Line />} label="Home" onClick={() => setMenuOpen(false)} active={location.pathname === "/"} />
-            <MobileSidebarItem to="/novels" icon={<RiBook3Line />} label="Explore" onClick={() => setMenuOpen(false)} />
-            <MobileSidebarItem to="/library" icon={<RiBookmarkLine />} label="Library" onClick={() => setMenuOpen(false)} />
+            <MobileSidebarItem to="/novels" icon={<RiBook3Line />} label="Explore" onClick={() => setMenuOpen(false)} active={location.pathname === "/novels"} />
+            <MobileSidebarItem to="/library" icon={<RiBookmarkLine />} label="Library" onClick={() => setMenuOpen(false)} active={location.pathname === "/library"} />
             
             {isAuthorOrAdmin && (
               <MobileSidebarItem to="/novel/author/me" icon={<RiFileUploadLine />} label="My Uploads" onClick={() => setMenuOpen(false)} active={location.pathname === "/novel/author/me"} />
@@ -331,13 +330,11 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
           {isAuthenticated && (
             <div className="py-2 text-left">
               <p className="px-4 text-[9px] font-semibold text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3 opacity-60">System</p>
-              <MobileSidebarItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" onClick={() => setMenuOpen(false)} />
-              
-              <MobileSidebarItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" onClick={() => setMenuOpen(false)} active={isPremium} />
-              <MobileSidebarItem to="/settings" icon={<RiSettings4Line />} label="Settings" onClick={() => setMenuOpen(false)} />
-              
-              <MobileSidebarItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" onClick={() => setMenuOpen(false)} />
-              {user?.role === 'admin' && <MobileSidebarItem to="/admin" icon={<RiShieldFlashLine />} label="Admin Panel" onClick={() => setMenuOpen(false)} />}
+              <MobileSidebarItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" onClick={() => setMenuOpen(false)} active={location.pathname === "/dashboard"} />
+              <MobileSidebarItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" onClick={() => setMenuOpen(false)} active={location.pathname === "/subscription"} />
+              <MobileSidebarItem to="/settings" icon={<RiSettings4Line />} label="Settings" onClick={() => setMenuOpen(false)} active={location.pathname === "/settings"} />
+              <MobileSidebarItem to="/wallet" icon={<RiWallet3Line />} label="Wallet" onClick={() => setMenuOpen(false)} active={location.pathname === "/wallet"} />
+              {user?.role === 'admin' && <MobileSidebarItem to="/admin" icon={<RiShieldFlashLine />} label="Admin Panel" onClick={() => setMenuOpen(false)} active={location.pathname === "/admin"} />}
             </div>
           )}
         </div>

@@ -120,17 +120,17 @@ export default function UserRegistry() {
   };
 
   return (
-    <div className="p-6 md:p-10 bg-[var(--bg-primary)] min-h-screen font-sans text-[var(--text-main)]">
+    <div className="p-4 md:p-10 bg-[var(--bg-primary)] min-h-screen font-sans text-[var(--text-main)]">
       
       {/* HEADER SECTION */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Registry</h1>
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">User Registry</h1>
           <p className="text-[var(--text-dim)] text-sm mt-1">Manage and monitor community members.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-grow md:w-64">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+          <div className="relative flex-grow sm:w-64">
             <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" size={16} />
             <input 
               type="text" 
@@ -141,48 +141,50 @@ export default function UserRegistry() {
             />
           </div>
           
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] px-5 py-2 rounded-2xl flex items-center gap-3 shadow-sm">
-             <span className="text-[10px] font-bold text-[var(--text-dim)] uppercase">System Reserve</span>
-             <WalletDisplay balance={adminWallet?.balance || 0} size={14} />
-          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-grow bg-[var(--bg-secondary)] border border-[var(--border)] px-4 py-2.5 rounded-2xl flex items-center justify-between sm:justify-start gap-3 shadow-sm">
+               <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase whitespace-nowrap">Reserve</span>
+               <WalletDisplay balance={adminWallet?.balance || 0} size={14} />
+            </div>
 
-          <button onClick={fetchUsers} className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-dim)] hover:text-[var(--accent)] transition-all active:scale-95 shadow-sm">
-            <LuRefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
+            <button onClick={fetchUsers} className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-dim)] hover:text-[var(--accent)] transition-all active:scale-95 shadow-sm">
+              <LuRefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* MEMBER LIST (ROW STYLE) */}
-      <div className="max-w-7xl mx-auto space-y-3">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-3">
         {loading ? (
           [...Array(6)].map((_, i) => (
-            <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] animate-pulse opacity-50"></div>
+            <div key={i} className="h-24 md:h-20 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] animate-pulse opacity-50"></div>
           ))
         ) : filteredUsers.length > 0 ? (
           filteredUsers.map((u) => (
             <div 
               key={u._id} 
-              className="group flex flex-col md:flex-row items-center justify-between bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-4 transition-all hover:border-[var(--accent)] hover:translate-x-1 shadow-sm gap-4"
+              className="group flex flex-col md:flex-row items-start md:items-center justify-between bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-4 md:p-5 transition-all hover:border-[var(--accent)] shadow-sm gap-5 md:gap-4"
             >
               {/* Identity Section */}
-              <div className="flex items-center gap-4 min-w-[300px] w-full md:w-auto">
+              <div className="flex items-center gap-4 w-full md:w-1/3 lg:w-1/4">
                 {renderAvatar(u)}
                 <div className="overflow-hidden">
-                  <h3 className="font-bold text-base leading-tight flex items-center gap-2">
-                    {u.username}
+                  <h3 className="font-bold text-sm md:text-base leading-tight flex items-center flex-wrap gap-2">
+                    <span className="truncate max-w-[120px] sm:max-w-none">{u.username}</span>
                     <span className="px-1.5 py-0.5 bg-[var(--bg-primary)] text-[8px] font-black rounded border border-[var(--border)] uppercase opacity-70">
                       {u.role}
                     </span>
                   </h3>
-                  <p className="text-xs text-[var(--text-dim)] truncate">{u.email}</p>
+                  <p className="text-[11px] md:text-xs text-[var(--text-dim)] truncate">{u.email}</p>
                 </div>
               </div>
 
-              {/* Stats Section */}
-              <div className="flex flex-1 items-center justify-between md:justify-around w-full max-w-xl">
-                <div className="text-center">
+              {/* Stats Section - Grid on mobile, Flex on desktop */}
+              <div className="grid grid-cols-2 md:flex md:flex-1 items-center justify-between gap-4 w-full">
+                <div className="text-left md:text-center">
                   <p className="text-[9px] text-[var(--text-dim)] uppercase font-bold mb-1">Status</p>
-                  <div className="flex items-center gap-1.5 justify-center">
+                  <div className="flex items-center gap-1.5 md:justify-center">
                     <div className={`w-1.5 h-1.5 rounded-full ${u.isBanned ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
                     <span className={`text-[10px] font-bold uppercase ${u.isBanned ? 'text-red-500' : 'text-emerald-500'}`}>
                       {u.isBanned ? 'Suspended' : 'Active'}
@@ -190,9 +192,9 @@ export default function UserRegistry() {
                   </div>
                 </div>
 
-                <div className="text-center">
+                <div className="text-right md:text-center">
                   <p className="text-[9px] text-[var(--text-dim)] uppercase font-bold mb-1">NC Balance</p>
-                  <div className="font-mono">
+                  <div className="font-mono flex justify-end md:justify-center">
                     <WalletDisplay balance={u.wallet?.balance || 0} size={12} />
                   </div>
                 </div>
@@ -205,41 +207,44 @@ export default function UserRegistry() {
                 </div>
               </div>
 
-              {/* Action Cluster */}
-              <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                <button 
-                  onClick={() => handleOpenDrawer(u)} 
-                  className="p-2.5 text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-primary)] rounded-xl transition-all border border-transparent hover:border-[var(--border)]"
-                  title="View Details"
-                >
-                  <LuExternalLink size={18} />
-                </button>
-                
-                {u.isBanned ? (
-                  <button 
-                    onClick={() => handleLiftBan(u._id)} 
-                    className="p-2.5 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/10"
-                    title="Lift Suspension"
-                  >
-                    <LuShieldCheck size={18} />
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => { setSelectedUser(u); setShowBanModal(true); }} 
-                    className="p-2.5 text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all border border-rose-500/10"
-                    title="Suspend User"
-                  >
-                    <LuUserX size={18} />
-                  </button>
-                )}
+              {/* Action Cluster - Full width buttons on mobile */}
+              <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end border-t border-[var(--border)] md:border-none pt-4 md:pt-0">
+                <span className="text-[9px] font-bold uppercase text-[var(--text-dim)] md:hidden">Actions</span>
+                <div className="flex gap-2">
+                    <button 
+                    onClick={() => handleOpenDrawer(u)} 
+                    className="p-2.5 text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-primary)] rounded-xl transition-all border border-[var(--border)] md:border-transparent md:hover:border-[var(--border)]"
+                    title="View Details"
+                    >
+                    <LuExternalLink size={18} />
+                    </button>
+                    
+                    {u.isBanned ? (
+                    <button 
+                        onClick={() => handleLiftBan(u._id)} 
+                        className="p-2.5 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/10"
+                        title="Lift Suspension"
+                    >
+                        <LuShieldCheck size={18} />
+                    </button>
+                    ) : (
+                    <button 
+                        onClick={() => { setSelectedUser(u); setShowBanModal(true); }} 
+                        className="p-2.5 text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all border border-rose-500/10"
+                        title="Suspend User"
+                    >
+                        <LuUserX size={18} />
+                    </button>
+                    )}
 
-                <button 
-                  onClick={() => { setSelectedUser(u); setIsDeleteModalOpen(true); }} 
-                  className="p-2.5 text-[var(--text-dim)] bg-gray-500/5 hover:bg-black hover:text-white rounded-xl transition-all border border-gray-500/10"
-                  title="Delete User"
-                >
-                  <LuTrash2 size={18} />
-                </button>
+                    <button 
+                    onClick={() => { setSelectedUser(u); setIsDeleteModalOpen(true); }} 
+                    className="p-2.5 text-[var(--text-dim)] bg-gray-500/5 hover:bg-black hover:text-white rounded-xl transition-all border border-gray-500/10"
+                    title="Delete User"
+                    >
+                    <LuTrash2 size={18} />
+                    </button>
+                </div>
               </div>
             </div>
           ))
@@ -255,7 +260,7 @@ export default function UserRegistry() {
       {/* SUSPENSION MODAL */}
       {showBanModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[var(--bg-secondary)] rounded-[2.5rem] shadow-2xl border border-[var(--border)] p-8">
+          <div className="w-full max-w-md bg-[var(--bg-secondary)] rounded-[2.5rem] shadow-2xl border border-[var(--border)] p-6 md:p-8">
             <h3 className="text-xl font-bold mb-2 text-red-500">Suspend Access</h3>
             <p className="text-sm text-[var(--text-dim)] mb-6">A reason is required for administrative audit logs.</p>
             <textarea
