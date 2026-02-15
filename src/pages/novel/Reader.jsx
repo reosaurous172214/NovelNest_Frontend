@@ -227,18 +227,18 @@ export default function Reader() {
                 }
               >
                 <header className="mb-16 pt-10">
-                  <h1 className="text-3xl md:text-5xl font-black mb-4 italic uppercase tracking-tighter leading-[1] text-[var(--text-main)]">
+                  <h1 className="text-3xl md:text-5xl font-bold mb-4  leading-[1] text-[var(--text-main)]">
                     {ch.title}
                   </h1>
                   <div className="flex items-center gap-4">
-                    <p className="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest">
-                      Transmission {ch.chapterNumber || chapterNumber}
+                    <p className="text-[10px] font-semibold text-[var(--accent)] ">
+                      Chapter {ch.chapterNumber || chapterNumber}
                     </p>
                     <div className="h-px flex-1 bg-[var(--border)]" />
                   </div>
                 </header>
 
-                <div className="whitespace-pre-wrap leading-relaxed tracking-wide mb-10 font-medium opacity-90 select-text">
+                <div className="whitespace-pre-wrap leading-relaxed  mb-10 font-medium opacity-90 select-text">
                   {ch.content}
                 </div>
               </section>

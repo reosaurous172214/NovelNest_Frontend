@@ -1,4 +1,4 @@
-import { LuPlay, LuTrash2, LuBookOpen } from "react-icons/lu";
+import { LuPlay, LuTrash2 } from "react-icons/lu";
 
 const UniversalCard = ({ novel, showProgress, showDelete, onRead, onDelete }) => {
     const imageUrl = novel.coverImage?.startsWith("http") 

@@ -8,11 +8,8 @@ import {
   RiShieldLine,
   RiCloseLine,
   RiLogoutBoxRLine,
-  RiBarChartGroupedLine, // Better for Analytics
-  RiSettings4Line,
-  RiGroupLine,
+  RiBarChartGroupedLine,
   RiNotification3Line,
-  RiPaintBrushFill
 } from "react-icons/ri"; 
 import Logo from "./AdminLogo";
 import { useAuth } from "../../../context/AuthContext";

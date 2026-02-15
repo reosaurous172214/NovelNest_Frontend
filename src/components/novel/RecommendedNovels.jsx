@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { Star, Bookmark, BookOpen, Sparkles, Heart } from "lucide-react";
+import { Star, BookOpen, Sparkles, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 
 const RecommendedNovels = ({ novelId }) => {

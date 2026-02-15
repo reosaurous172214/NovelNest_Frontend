@@ -1,24 +1,33 @@
-import React, { useState, useEffect, useMemo } from "react";
+import  { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie
 } from 'recharts';
 import { 
-  LuTrendingUp, LuDollarSign, LuUsers, LuRefreshCw, LuZap, 
-  LuArrowUpRight, LuArrowDownRight, LuBox, LuAward 
+  LuTrendingUp, LuDollarSign, LuUsers, LuRefreshCw, LuZap, LuBox, LuAward 
 } from "react-icons/lu";
 import { getHeaders } from '../../getItems/getAuthItems';
+
+/* --- STATIC CONSTANTS ---
+  Moved outside the component to prevent recreation on every render 
+  and satisfy the react-hooks/exhaustive-deps ESLint rule.
+*/
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const BASE_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
 
 export default function AdvancedAnalytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Syncing colors with your CSS Variable --accent
-  const THEME_ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b82f6';
-  const COLORS = [THEME_ACCENT, '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+  // Memoize the accent color from your CSS variables to keep a stable reference
+  const themeAccent = useMemo(() => {
+    if (typeof window === 'undefined') return '#3b82f6';
+    return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b82f6';
+  }, []);
 
-  const fetchSync = async () => {
+  // Stabilize the fetch function with useCallback
+  const fetchSync = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/analytics`, getHeaders());
@@ -28,27 +37,30 @@ export default function AdvancedAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchSync(); }, []);
+  useEffect(() => { 
+    fetchSync(); 
+  }, [fetchSync]);
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  
+  // Chart data calculation
   const chartData = useMemo(() => {
     if (!data?.charts?.revenue) return [];
     return data.charts.revenue.map(d => ({
-      name: months[d._id.month - 1] || 'N/A',
+      name: MONTHS[d._id.month - 1] || 'N/A',
       amount: d.amount
     }));
   }, [data]);
 
+  // Pie chart genre calculation
   const genreData = useMemo(() => {
     if (!data?.charts?.genres) return [];
+    const colorPalette = [themeAccent, ...BASE_COLORS.slice(1)];
     return data.charts.genres.map((g, i) => ({
       ...g,
-      fill: COLORS[i % COLORS.length]
+      fill: colorPalette[i % colorPalette.length]
     }));
-  }, [data]);
+  }, [data, themeAccent]);
 
   if (loading) return (
     <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
@@ -67,7 +79,7 @@ export default function AdvancedAnalytics() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 animate-in fade-in duration-700 text-[var(--text-main)] font-bank-crisp">
       
-      {/* 1. Themed Header */}
+      {/* 1. Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-8">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[var(--text-main)] underline decoration-[var(--accent)] decoration-2 underline-offset-8 uppercase italic">
@@ -88,7 +100,7 @@ export default function AdvancedAnalytics() {
         </div>
       </header>
 
-      {/* 2. KPI Section - Using Theme Variables */}
+      {/* 2. KPI Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <KpiCard label="Total Revenue" value={`$${(data.summary.totalRevenue || 0).toLocaleString()}`} icon={<LuDollarSign size={18}/>} />
         <KpiCard label="Monthly Flow" value={`$${(data.summary.monthlyRevenue || 0).toLocaleString()}`} icon={<LuTrendingUp size={18}/>} />
@@ -96,7 +108,7 @@ export default function AdvancedAnalytics() {
         <KpiCard label="Avg Retention" value="84.2%" icon={<LuUsers size={18}/>} />
       </div>
 
-      {/* 3. Charts Section - Using --bg-secondary and --border */}
+      {/* 3. Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-[var(--text-main)] mb-8 flex items-center gap-2 italic uppercase tracking-wider">
@@ -135,7 +147,7 @@ export default function AdvancedAnalytics() {
             {data.charts.genres.map((g, i) => (
               <div key={i} className="flex items-center justify-between text-xs py-1.5 border-b border-[var(--border)] last:border-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{backgroundColor: COLORS[i % COLORS.length]}} />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{backgroundColor: genreData[i]?.fill}} />
                   <span className="font-medium text-[var(--text-dim)] uppercase">{g._id}</span>
                 </div>
                 <span className="font-semibold">{g.count} titles</span>
@@ -145,12 +157,10 @@ export default function AdvancedAnalytics() {
         </div>
       </div>
 
-      {/* 4. Novels & Power Readers Row */}
+      {/* 4. Scorecards Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Top Novels - Using Table Theme */}
         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
-          <div className="px-6 py-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-primary)]">
+          <div className="px-6 py-5 border-b border-[var(--border)] bg-[var(--bg-primary)]">
             <h3 className="text-sm font-semibold text-[var(--text-main)] italic flex items-center gap-2 uppercase tracking-widest">
               <LuZap className="text-[var(--accent)]" size={16} /> Momentum Scorecard
             </h3>
@@ -160,7 +170,7 @@ export default function AdvancedAnalytics() {
               <tbody className="divide-y divide-[var(--border)]">
                 {data.topContent.map((novel, i) => (
                   <tr key={i} className="hover:bg-[var(--accent)]/[0.03] transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-left">
                       <p className="font-semibold text-[var(--text-main)]">{novel.title}</p>
                       <span className="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-wider italic">{novel.genres?.[0]}</span>
                     </td>
@@ -182,9 +192,8 @@ export default function AdvancedAnalytics() {
           </div>
         </div>
 
-        {/* Power Readers - Glass Effect */}
         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
-          <div className="px-6 py-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-primary)]">
+          <div className="px-6 py-5 border-b border-[var(--border)] bg-[var(--bg-primary)]">
             <h3 className="text-sm font-semibold text-[var(--text-main)] italic flex items-center gap-2 uppercase tracking-widest">
               <LuAward className="text-emerald-500" size={16} /> Core Contributors
             </h3>
@@ -194,19 +203,17 @@ export default function AdvancedAnalytics() {
               <div key={i} className="flex items-center justify-between p-4 hover:bg-[var(--accent)]/[0.05] transition-all rounded-xl">
                 <div className="flex items-center gap-3">
                   <img 
-                    src={user.profilePicture} 
+                    src={user.profilePicture || `https://ui-avatars.com/api/?name=${user.username}`} 
                     alt="profile" 
                     className="w-9 h-9 rounded-full border border-[var(--border)] object-cover"
-                    onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + user.username; }}
                   />
-                  <div>
+                  <div className="text-left">
                     <p className="text-xs font-bold text-[var(--text-main)] uppercase tracking-tight">{user.username}</p>
                     <p className="text-[10px] text-[var(--text-dim)] font-medium">Rank #{i + 1} Neural Reader</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold text-emerald-500 font-mono">{user.readingStats?.totalChaptersRead || 0} CAPS</p>
-                  <p className="text-[9px] text-[var(--text-dim)] font-bold uppercase tracking-tighter italic">Acquired</p>
                 </div>
               </div>
             ))}
@@ -217,20 +224,19 @@ export default function AdvancedAnalytics() {
   );
 }
 
-// Sub-component tailored to your tech theme
+/* --- REUSABLE SUB-COMPONENTS --- */
+
 function KpiCard({ label, value, icon }) {
   return (
     <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-xl hover:border-[var(--accent)] transition-all group overflow-hidden relative">
       <div className="text-[var(--text-dim)] mb-4 group-hover:text-[var(--accent)] transition-colors relative z-10">{icon}</div>
-      <p className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-widest relative z-10">{label}</p>
-      <h4 className="text-xl font-bold mt-1 text-[var(--text-main)] font-bank-crisp relative z-10">{value}</h4>
-      {/* Subtle Glow Background */}
+      <p className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-widest relative z-10 text-left">{label}</p>
+      <h4 className="text-xl font-bold mt-1 text-[var(--text-main)] relative z-10 text-left">{value}</h4>
       <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)] opacity-[0.02] blur-3xl group-hover:opacity-[0.05] transition-opacity"></div>
     </div>
   );
 }
 
-// Tooltip matched to Glass Midnight Theme
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.[0]) {
     return (

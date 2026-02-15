@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // 1. Added useCallback
 import { 
   LuBook, LuUsers, LuIndianRupee, LuActivity, LuRefreshCw, 
   LuShieldAlert, LuCircleCheck, LuChevronRight, LuDownload, LuFileText 
@@ -19,29 +19,30 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
+  // 2. Wrap getStats in useCallback to create a stable reference
+  const getStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAdminStats();
+      setStats(data);
+    } catch (err) {
+      showAlert("Could not sync dashboard data", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showAlert]); // showAlert is stable from Context, making this function stable
+
+  // 3. getStats is now a safe and exhaustive dependency
   useEffect(() => {
-    const getStats = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAdminStats();
-        setStats(data);
-      } catch (err) {
-        showAlert("Could not sync dashboard data", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
     getStats();
-  }, []);
+  }, [getStats]);
 
-  // --- PDF EXPORT LOGIC ---
-
+  // PDF EXPORT LOGIC ... (Exactly as you have it)
   const exportUserDatabase = async () => {
     setIsExporting(true);
     try {
-      const data = await fetchAllUsers(); // Call the /users/export endpoint
+      const data = await fetchAllUsers();
       const doc = new jsPDF();
-      
       doc.setFontSize(18);
       doc.text("USER MASTER REGISTRY", 14, 20);
       doc.setFontSize(9);
@@ -73,9 +74,8 @@ export default function AdminDashboard() {
   const exportTransactionLedger = async () => {
     setIsExporting(true);
     try {
-      const data = await fetchAllTransactions(); // Call /transactions/export
-      const doc = new jsPDF('l'); // Landscape mode
-      
+      const data = await fetchAllTransactions();
+      const doc = new jsPDF('l');
       doc.setFontSize(18);
       doc.text("TRANSACTION LEDGER", 14, 20);
 
@@ -117,13 +117,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
-      {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 text-left">
           <div className="p-3 bg-[var(--accent)]/10 rounded-2xl text-[var(--accent)] border border-[var(--accent)]/20 shadow-inner">
             <LuActivity size={24} />
           </div>
-          <div className="text-left">
+          <div>
             <h2 className="text-3xl font-bold tracking-tight">Admin Terminal</h2>
             <p className="text-[var(--text-dim)] text-[10px] font-bold uppercase tracking-[0.2em]">Operational Telemetry</p>
           </div>
@@ -141,7 +140,6 @@ export default function AdminDashboard() {
         </div>
       </div>
       
-      {/* STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, idx) => (
           <div key={idx} className="p-6 rounded-[2rem] bg-[var(--bg-secondary)] border border-[var(--border)] shadow-sm hover:shadow-md transition-all group text-left">
@@ -157,8 +155,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* RECENT ACTIVITY LOG */}
-        <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] p-8 shadow-sm">
+        <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] p-8 shadow-sm text-left">
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-3">
               <LuActivity className="text-[var(--accent)]" size={18} /> System Diagnostics
@@ -167,12 +164,11 @@ export default function AdminDashboard() {
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-[var(--border)] rounded-[2rem] bg-[var(--bg-primary)]/40">
              <LuCircleCheck className="text-emerald-500 mb-4 opacity-40" size={48} />
              <p className="text-[var(--text-dim)] text-[11px] font-bold uppercase tracking-widest">
-              No anomalies detected in the current cycle
+               No anomalies detected in the current cycle
             </p>
           </div>
         </div>
 
-        {/* DATA EXPORT TOOLS */}
         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[2rem] p-8 shadow-sm text-left">
           <h3 className="font-bold text-xs uppercase tracking-[0.2em] mb-8">Data Protocols</h3>
           <div className="space-y-4">
@@ -189,11 +185,6 @@ export default function AdminDashboard() {
               className="w-full p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-widest hover:border-emerald-500 transition-all flex items-center justify-between group"
             >
               <span className="flex items-center gap-3"><LuIndianRupee className="text-emerald-500" /> Transaction Ledger</span>
-              <LuChevronRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            
-            <button className="w-full p-5 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-widest hover:border-red-500/40 text-red-500/80 transition-all flex items-center justify-between group">
-              <span className="flex items-center gap-3"><LuShieldAlert /> Maintenance Mode</span>
               <LuChevronRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </div>

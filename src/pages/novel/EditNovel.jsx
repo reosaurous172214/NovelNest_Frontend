@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css"; 
@@ -12,7 +12,6 @@ import { getHeaders } from "../../getItems/getAuthItems";
 
 export default function EditNovel() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { showAlert } = useAlert();
 
   const [novel, setNovel] = useState(null);

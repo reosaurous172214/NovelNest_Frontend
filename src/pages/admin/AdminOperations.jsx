@@ -124,7 +124,6 @@ export default function AdminAuditLedger() {
         {filteredLogs.length > 0 ? (
           filteredLogs.map((log) => {
             // METADATA LOGIC: Determine if the target was a user or novel
-            const isUser = log.targetModel === 'User' || log.actionType?.includes("USER");
             const displayName =  log.targetMetadata?.name || "Unknown Entity";
             const displayImage = log.targetId?.profilePicture || log.targetId?.coverImage || log.targetMetadata?.image;
 

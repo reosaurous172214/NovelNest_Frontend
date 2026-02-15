@@ -3,12 +3,10 @@ import axios from "axios";
 import { 
   LuExternalLink, 
   LuSearch, 
-  LuFilter, 
   LuUser, 
   LuShieldCheck, 
   LuUserX, 
   LuRefreshCw,
-  LuLayoutDashboard,
   LuTrash2
 } from "react-icons/lu"; 
 import { fetchAllUsers, banUser, liftban } from "../../api/apiAdmin";

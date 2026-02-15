@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { 
-  Camera, Edit3, Lock, User, Mail, Globe, 
-  Settings, ShieldCheck, Activity, Save, CheckCircle2, ExternalLink,
+  Camera, Edit3, Lock, User,  Globe, 
+  Settings, ShieldCheck, Activity, Save, CheckCircle2,
   Crown // Added for Premium Badge
 } from "lucide-react";
 import { useAlert } from "../context/AlertContext";
@@ -27,40 +27,42 @@ export default function Profile() {
   /* --- PREMIUM CHECK --- */
   const isPremium = user?.subscription?.plan && user?.subscription?.plan !== "free";
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUser(data);
+      setForm(prev => ({
+        ...prev,
+        username: data.username || "",
+        bio: data.bio || "",
+        mobile: data.mobile || "",
+        country: data.location?.country || "",
+        state: data.location?.state || "",
+        city: data.location?.city || "",
+        timezone: data.location?.timezone || "",
+        theme: data.preferences?.theme || "default",
+        language: data.preferences?.language || "en",
+        matureContent: data.preferences?.matureContent || false,
+        notifications: data.preferences?.notifications || true,
+        showEmail: data.privacy?.showEmail || false,
+        showMobile: data.privacy?.showMobile || false,
+        showLocation: data.privacy?.showLocation || true,
+      }));
+
+      setPreview(data.profilePicture ? `${process.env.REACT_APP_API_URL}${data.profilePicture}` : null);
+    } catch (err) {
+      showAlert("Unable to load profile.", "error");
+    }
+  }, [showAlert]); // 3. showAlert is a safe dependency here
+
+  // 4. Now the useEffect array is clean and satisfies ESLint
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(data);
-        setForm(prev => ({
-          ...prev,
-          username: data.username || "",
-          bio: data.bio || "",
-          mobile: data.mobile || "",
-          country: data.location?.country || "",
-          state: data.location?.state || "",
-          city: data.location?.city || "",
-          timezone: data.location?.timezone || "",
-          theme: data.preferences?.theme || "default",
-          language: data.preferences?.language || "en",
-          matureContent: data.preferences?.matureContent || false,
-          notifications: data.preferences?.notifications || true,
-          showEmail: data.privacy?.showEmail || false,
-          showMobile: data.privacy?.showMobile || false,
-          showLocation: data.privacy?.showLocation || true,
-        }));
-
-        setPreview(data.profilePicture ? `${process.env.REACT_APP_API_URL}${data.profilePicture}` : null);
-      } catch (err) {
-        showAlert("Unable to load profile.", "error");
-      }
-    };
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

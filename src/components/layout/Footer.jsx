@@ -1,4 +1,4 @@
-import { FaTerminal, FaShieldAlt, FaCodeBranch, FaClock } from "react-icons/fa";
+import { FaTerminal, FaCodeBranch, FaClock } from "react-icons/fa";
 
 const Footer = () => {
   // DYNAMIC STYLE TOKENS

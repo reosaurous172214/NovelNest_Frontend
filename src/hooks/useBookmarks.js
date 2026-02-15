@@ -1,5 +1,5 @@
- import {addBookmark,removeBookmark} from "../api/bookmarks";
-import { useEffect, useState } from "react";
+ import {addBookmark} from "../api/bookmarks";
+import { useState } from "react";
 
 export function useAddBookmark() {
     const [adding, setAdding] = useState(false);

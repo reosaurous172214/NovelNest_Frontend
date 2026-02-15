@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Settings, Check, MoveLeft, Type, Palette, Layout, List, Search } from "lucide-react";
+import { useState } from "react";
+import { Check, MoveLeft, Type, Palette, Layout, List, Search } from "lucide-react";
 import { themeMap, fontMap } from "../../config/readerConfig";
 
 export default function MenuBar({ 
@@ -80,7 +80,7 @@ export default function MenuBar({
                   placeholder="SEARCH MANUSCRIPT..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border ${uiBorder} rounded-lg py-2 pl-8 pr-4 text-[9px] font-bold tracking-widest outline-none focus:border-[var(--accent)]"
+                  className={`w-full bg-[var(--bg-primary)] border ${uiBorder} rounded-lg py-2 pl-8 pr-4 text-[9px] font-bold tracking-widest outline-none focus:border-[var(--accent)]`}
                 />
               </div>
               
@@ -124,7 +124,7 @@ export default function MenuBar({
                   type="range" min="14" max="32" 
                   value={settings.fontSize}
                   onChange={(e) => setSettings({...settings, fontSize: e.target.value})}
-                  className="w-full h-1.5 bg-[var(--bg-primary)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)] border ${uiBorder}" 
+                  className={`w-full h-1.5 bg-[var(--bg-primary)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)] border ${uiBorder}`}
                 />
               </section>
               <section className="space-y-2">

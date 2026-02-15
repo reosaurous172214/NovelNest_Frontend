@@ -1,5 +1,5 @@
- import {addFavourites,removeFavourites} from "../api/favourites";
-import { useEffect, useState } from "react";
+ import {addFavourites} from "../api/favourites";
+import { useState } from "react";
 
 export function useAddFavourites() {
     const [adding, setAdding] = useState(false);

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState, useMemo } from "react";
-import { ImageIcon, X, UploadCloud, Search, Feather, Info } from "lucide-react";
+import {  X, UploadCloud, Search, Feather, Info } from "lucide-react";
 
 const GENRES = ["Fantasy", "Romance", "Action", "Adventure", "Sci-Fi", "Mystery", "Thriller", "Horror", "Drama", "Comedy", "Slice of Life", "Supernatural", "Historical", "Isekai", "LitRPG", "Cultivation", "Martial Arts", "Psychological", "Tragedy", "Mythology", "Post-Apocalyptic", "Cyberpunk", "Steampunk", "Dark Fantasy", "Urban Fantasy", "War", "Politics"];
 const TAGS = ["Slow Burn", "Fast Paced", "Character Driven", "Plot Heavy", "World Building", "Short Chapters", "Long Chapters", "Revenge", "Redemption", "Betrayal", "Friendship", "Love Triangle", "Found Family", "Coming of Age", "Survival", "Power Struggle", "Politics", "War", "Dark", "Light Hearted", "Emotional", "Wholesome", "Gritty", "Tragic", "Hopeful", "Strong Female Lead", "Anti Hero", "Villain MC", "Overpowered MC", "Weak to Strong", "Genius MC", "Morally Grey", "Time Loop", "Reincarnation", "Regression", "Multiple POV", "First Person", "Unreliable Narrator", "Twists", "Cliffhangers", "Enemies to Lovers", "Friends to Lovers", "Slow Romance", "No Romance", "Harem", "Reverse Harem", "Binge Worthy", "Addictive", "Easy Read", "Thought Provoking"];
@@ -14,13 +14,7 @@ export default function CreateNovel() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setCoverImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
+ 
 
   const toggleItem = (listName, item) => {
     setFormData((prev) => ({

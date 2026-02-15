@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LuHistory, LuHeart, LuBookmark, LuTrash2, LuLibrary } from "react-icons/lu"; // Switched to Lucide for consistent weights
+import { LuHistory, LuHeart, LuBookmark, LuTrash2 } from "react-icons/lu"; 
 
 import UniversalCard from "../../components/library/UniversalCard";
 import {
@@ -23,9 +23,9 @@ const Library = ({ isDash = false }) => {
   const [novels, setNovels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDataInitialized, setIsDataInitialized] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token"),
-  );
+  
+  // Authentication check
+  const isAuthenticated = !!localStorage.getItem("token");
 
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({
@@ -34,6 +34,7 @@ const Library = ({ isDash = false }) => {
     onConfirm: () => {},
   });
 
+  // Memoized data fetching to satisfy ESLint and prevent infinite loops
   const fetchLibraryData = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -129,9 +130,8 @@ const Library = ({ isDash = false }) => {
       />
 
       <div className="max-w-7xl mx-auto">
-        {/* --- NAVIGATION & CONTROLS BAR --- */}
+        {/* Navigation Bar */}
         <nav className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-6 border-b border-[var(--border)] pb-6 md:pb-8">
-          
           <div className="w-full md:w-auto">
             <div className="bg-[var(--bg-secondary)] rounded-2xl md:rounded-full p-1.5 flex flex-row gap-1 border border-[var(--border)] overflow-x-auto no-scrollbar shadow-sm">
               {[
@@ -142,7 +142,7 @@ const Library = ({ isDash = false }) => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center justify-center gap-2 px-5 md:px-7 py-2.5 rounded-xl md:rounded-full font-semibold transition-all text-xs tracking-tight whitespace-nowrap flex-1 md:flex-none ${
+                  className={`flex items-center justify-center gap-2 px-5 md:px-7 py-2.5 rounded-xl md:rounded-full font-bold transition-all text-xs tracking-tight whitespace-nowrap flex-1 md:flex-none ${
                     activeTab === key 
                     ? "bg-[var(--accent)] text-white shadow-md" 
                     : "text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-primary)]/50"
@@ -157,7 +157,7 @@ const Library = ({ isDash = false }) => {
           {novels.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-red-500/5 text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 text-xs font-semibold tracking-wide uppercase"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-red-500/5 text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 text-xs font-bold tracking-wide uppercase"
             >
               <LuTrash2 size={14} />
               <span>Clear {activeTab}</span>
@@ -165,12 +165,12 @@ const Library = ({ isDash = false }) => {
           )}
         </nav>
 
-        {/* --- CONTENT GRID --- */}
+        {/* Content Section */}
         <main className="w-full">
           {!isAuthenticated ? (
-            <div className="flex justify-center py-20"> <AuthPrompt /> </div>
+            <div className="flex justify-center py-20 text-left"> <AuthPrompt /> </div>
           ) : loading ? (
-            <div className="flex justify-center py-20"> <Loading activeTab={activeTab} /> </div>
+            <div className="flex justify-center py-20 text-left"> <Loading activeTab={activeTab} /> </div>
           ) : novels.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 justify-items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
               {novels.map((novel) => (
@@ -187,7 +187,7 @@ const Library = ({ isDash = false }) => {
               ))}
             </div>
           ) : (
-            <div className="flex justify-center py-20"> <Empty activeTab={activeTab} /> </div>
+            <div className="flex justify-center py-20 text-left"> <Empty activeTab={activeTab} /> </div>
           )}
         </main>
       </div>

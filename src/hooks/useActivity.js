@@ -27,14 +27,14 @@ export default function useActivity(userId) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   // Automatically fetch when the userId becomes available (on login)
   useEffect(() => {
     if (userId && token) {
       loadDashboardData();
     }
-  }, [userId, loadDashboardData]);
+  }, [userId,token, loadDashboardData]);
 
   return { activities, loading, hours, refresh: loadDashboardData };
 }

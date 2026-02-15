@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash, FaCheckDouble, FaBell, FaCommentDots, FaHeart, FaPlusCircle, FaChevronRight } from "react-icons/fa";
 import { notificationApi } from "../api/notificationApi";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   RiFireLine, RiBook3Line, RiLineChartLine, RiUserHeartLine, 
-  RiQuillPenLine, RiVipCrownLine, RiCalendarCheckLine, RiArrowUpSLine, RiArrowDownSLine 
+  RiQuillPenLine, RiVipCrownLine, RiCalendarCheckLine, RiArrowUpSLine
 } from "react-icons/ri"; // Modern Remix Icons
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';

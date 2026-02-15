@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useActivity from "../hooks/useActivity";
 import useLastRead from "../hooks/useHistory";
@@ -11,7 +10,6 @@ import Library from "./lib/Library";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { activities = [], hours = "0.0" } = useActivity(user);
   const { getLastRead, getting: historyLoading } = useLastRead();
@@ -37,7 +35,7 @@ export default function Dashboard() {
       }
     };
     initHistory();
-  }, [user]);
+  }, [user, getLastRead]);
 
   if (authLoading) return <LoadingSpinner />;
 
