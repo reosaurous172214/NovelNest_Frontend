@@ -180,8 +180,8 @@ export default function Reader() {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
         <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-[0.4em] animate-pulse">
-          Syncing Manuscript...
+        <p className="font-semibold text-[10px] text-[var(--accent)]  animate-pulse">
+          Loading Chapter ....
         </p>
       </div>
     );
@@ -263,7 +263,7 @@ export default function Reader() {
                 <div className="text-center opacity-20">
                   <div className="h-px w-20 bg-[var(--text-dim)] mx-auto mb-4" />
                   <p className="text-[10px] font-black uppercase">
-                    End of Records
+                    ---- End ----
                   </p>
                 </div>
               )
@@ -283,7 +283,7 @@ export default function Reader() {
                   }
                   className="flex items-center justify-center gap-3 px-8 py-5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-[var(--text-main)] font-black uppercase tracking-widest text-[10px] hover:border-[var(--accent)] transition-all"
                 >
-                  <FaChevronLeft /> Previous Node
+                  <FaChevronLeft /> Previous Chapter
                 </button>
               ) : (
                 <div />
@@ -298,12 +298,12 @@ export default function Reader() {
                   }
                   className="flex items-center justify-center gap-3 px-8 py-5 bg-[var(--accent)] rounded-2xl text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[var(--accent)]/20 hover:brightness-110 transition-all"
                 >
-                  Next Transmission <FaChevronRight />
+                  Next Chapter <FaChevronRight />
                 </button>
               ) : (
                 !isLocked && (
                   <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 text-[10px] font-black uppercase tracking-[0.3em] text-center">
-                    Archive Complete
+                    Novel completed.
                   </div>
                 )
               )}

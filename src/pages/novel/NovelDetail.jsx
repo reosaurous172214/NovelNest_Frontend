@@ -359,7 +359,7 @@ const NovelDetail = () => {
 
         {/* STORY DETAILS GRID */}
         <div className="mt-10 text-left">
-          <div className={`p-8 ${glassStyle}`}>
+          <div className={`p-2 md:p-8 ${glassStyle}`}>
             <h2 className="text-sm font-bold uppercase tracking-widest mb-8 text-[var(--text-main)] flex items-center gap-3">
               <FaShieldAlt className="text-[var(--accent)]" size={16} /> Story Details
             </h2>
