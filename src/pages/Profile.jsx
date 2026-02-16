@@ -80,7 +80,9 @@ export default function Profile() {
 
       setPreview(
         data.profilePicture
-          ? `${process.env.REACT_APP_API_URL}${data.profilePicture}`
+          ? data.profilePicture.startsWith("http")
+            ? data.profilePicture // Use Cloudinary URL as is
+            : `${process.env.REACT_APP_API_URL}${data.profilePicture}` // Use local path
           : null,
       );
     } catch (err) {
