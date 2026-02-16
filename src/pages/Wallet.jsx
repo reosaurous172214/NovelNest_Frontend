@@ -51,6 +51,7 @@ export default function WalletDashboard() {
 
   const handleBuyCoins = async (amount, price) => {
     try {
+      const token = localStorage.getItem("token");
       const { data } = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/payments/create-checkout`,
         { amount, price },
