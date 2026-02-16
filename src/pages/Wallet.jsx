@@ -54,8 +54,12 @@ export default function WalletDashboard() {
       const { data } = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/payments/create-checkout`,
         { amount, price },
-        getHeaders(),
-        { withCredentials: true }
+        
+        { 
+          headers: {
+      Authorization: `Bearer ${token}`,
+    },
+          withCredentials: true }
       );
       if (data.url) {
         localStorage.setItem("origin","/wallet");
