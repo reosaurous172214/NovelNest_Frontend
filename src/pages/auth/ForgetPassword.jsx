@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { Mail, Lock, Loader2, ArrowRight, ShieldCheck, KeyRound } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, KeyRound } from "lucide-react";
 import { useAlert } from "../../context/AlertContext";
 import NovelHubLogo from "../../components/layout/Logo";
 
