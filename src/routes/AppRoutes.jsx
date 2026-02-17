@@ -36,6 +36,7 @@ import RequestPage from "../pages/request/RequestPage";
 import AdminAudits from "../pages/admin/AdminAudit";
 import Subscription from "../pages/Subscription";
 import AdminAnalytics from "../pages/admin/AdminAnalytics";
+import ForgotPassword from "../pages/auth/ForgetPassword";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -97,6 +98,7 @@ const AppRoutes = () => {
       <Route element={<MainLayout currentTheme={currentTheme} setTheme={setCurrentTheme} />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
