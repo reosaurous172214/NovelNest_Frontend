@@ -220,8 +220,8 @@ const NovelDetail = () => {
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* HERO SECTION */}
         <div className={`relative p-6 md:p-10 ${glassStyle}`}>
-          <div className="flex flex-col md:flex-row gap-10">
-            <div className="mx-auto md:mx-0 shrink-0">
+          <div className="flex flex-col lg:flex-row gap-10">
+            <div className="mx-auto lg:mx-0 shrink-0">
               <img
                 // Check if coverImage exists and prepend API URL if it's a local path
                 src={

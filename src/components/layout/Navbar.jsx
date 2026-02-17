@@ -5,7 +5,8 @@ import {
   RiHome4Line, RiBook3Line, RiLogoutBoxRLine, RiDashboardLine, RiMenu4Line, RiCloseLine, 
   RiSearchLine, RiArrowRightSLine, RiUserLine, RiSettings4Line, RiShieldFlashLine, RiWallet3Line, RiBookmarkLine,
   RiFileUploadLine,
-  RiVipCrownLine // Icon for Subscription
+  RiVipCrownLine,
+  RiEdit2Line // Added for Request Submission
 } from "react-icons/ri";
 import Logo from "./Logo";
 import { useAuth } from "../../context/AuthContext";
@@ -128,13 +129,8 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
         }
       `}</style>
 
-      {/* Changed pt-4 to md:pt-4 and pt-0 on mobile for full bleed feel */}
       <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 antialiased ${show ? "translate-y-0" : "-translate-y-full"} ${scrolled ? "pt-0 md:pt-2" : "pt-0 md:pt-4"}`}>
-        
-        {/* Container: Changed max-w classes to be full width on mobile (max-w-full) */}
         <div className={`mx-auto w-full transition-all duration-500 ${scrolled ? "max-w-full md:max-w-[95%] px-0 md:px-4" : "max-w-full md:max-w-[98%] px-0 md:px-4"}`}>
-          
-          {/* Main Bar: Removed rounded corners on mobile for full-width flush look */}
           <div className="bg-[var(--bg-secondary)] border-b md:border border-[var(--border)] shadow-lg rounded-none md:rounded-[2rem] px-4 md:px-8 py-2.5 flex items-center justify-between backdrop-blur-3xl relative h-[65px]">
             
             {!mobileSearchActive && (
@@ -143,7 +139,6 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               </Link>
             )}
 
-            {/* UNIFIED SEARCH COMPONENT */}
             <div 
               ref={searchRef}
               className={`
@@ -175,7 +170,6 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                 )}
               </form>
 
-              {/* SEARCH RESULTS DROPDOWN */}
               {searchOpen && (
                 <div className="absolute top-[105%] left-0 right-0 md:left-0 md:right-0 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-b-2xl md:rounded-2xl shadow-2xl overflow-hidden z-[110] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-2 max-h-[400px] overflow-y-auto no-scrollbar">
@@ -198,19 +192,19 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               )}
             </div>
 
-            {/* RIGHT SIDE ACTIONS */}
             <div className={`flex items-center gap-2 md:gap-4 ${mobileSearchActive ? "hidden" : "flex"}`}>
-              <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+              <div className="hidden xl:flex items-right ">
                 <NavItem to="/" icon={<RiHome4Line />} label="Home" active={location.pathname === "/"} />
                 <NavItem to="/novels" icon={<RiBook3Line />} label="Explore" active={location.pathname === "/novels"} />
                 <NavItem to="/library" icon={<RiBookmarkLine />} label="Library" active={location.pathname === "/library"} />
+                <NavItem to="/request" icon={<RiEdit2Line />} label="Request" active={location.pathname === "/request"} />
                 
                 {isAuthorOrAdmin && (
                   <NavItem to="/novel/author/me" icon={<RiFileUploadLine />} label="Uploads" active={location.pathname === "/novel/author/me"} />
                 )}
               </div>
 
-              <div className="h-6 w-[1px] bg-[var(--border)] hidden md:block mx-1"></div>
+              <div className="h-6 w-[1px] bg-[var(--border)] hidden lg:block mx-1"></div>
 
               <button className="lg:hidden p-2 text-[var(--text-main)] hover:bg-[var(--bg-primary)] rounded-xl transition-all" onClick={() => setMobileSearchActive(true)}>
                 <RiSearchLine size={20} />
@@ -219,7 +213,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
               {isAuthenticated ? (
                 <div className="flex items-center gap-2 md:gap-3">
                   <NotificationBar currentUser={user} />
-                  <div className="relative hidden md:block" ref={profileRef}>
+                  <div className="relative hidden lg:block" ref={profileRef}>
                     <button 
                       onClick={() => setProfileOpen(!profileOpen)} 
                       className={`flex items-center gap-2.5 p-1 pr-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl transition-all active:scale-95 ${isPremium ? 'premium-glow' : 'hover:border-[var(--accent)]/50'}`}
@@ -243,6 +237,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                       <div className="absolute right-0 mt-3 w-60 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden z-[110] animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-2 space-y-0.5">
                           <DropdownItem to="/dashboard" icon={<RiDashboardLine />} label="Dashboard" />
+                          <DropdownItem to="/request" icon={<RiEdit2Line />} label="Submit Request" />
                           <DropdownItem to="/profile" icon={<RiUserLine />} label="My Profile" />
                           <DropdownItem to="/library" icon={<RiBookmarkLine />} label="My Library" />
                           <DropdownItem to="/subscription" icon={<RiVipCrownLine />} label="Subscription" active={isPremium} />
@@ -266,8 +261,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
                 </div>
               )}
 
-              {/* Mobile Menu Trigger */}
-              <button className="md:hidden p-2.5 rounded-xl bg-[var(--bg-primary)] text-[var(--text-main)] border border-[var(--border)] transition-colors active:bg-[var(--bg-secondary)]" onClick={() => setMenuOpen(true)}>
+              <button className="xl:hidden p-2.5 rounded-xl bg-[var(--bg-primary)] text-[var(--text-main)] border border-[var(--border)] transition-colors active:bg-[var(--bg-secondary)]" onClick={() => setMenuOpen(true)}>
                 <RiMenu4Line size={20} />
               </button>
             </div>
@@ -276,9 +270,9 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
       </nav>
 
       {/* MOBILE SIDEBAR */}
-      <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] transition-opacity md:hidden ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setMenuOpen(false)} />
+      <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] transition-opacity xl:hidden ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setMenuOpen(false)} />
       
-      <aside className={`fixed top-0 right-0 h-full w-[280px] bg-[var(--bg-secondary)] border-l border-[var(--border)] z-[160] transition-transform duration-400 md:hidden flex flex-col ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <aside className={`fixed top-0 right-0 h-full w-[280px] bg-[var(--bg-secondary)] border-l border-[var(--border)] z-[160] transition-transform duration-400 xl:hidden flex flex-col ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
         
         <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
           <Logo />
@@ -321,6 +315,7 @@ const Navbar = ({ show, scrolled: propScrolled }) => {
             <MobileSidebarItem to="/" icon={<RiHome4Line />} label="Home" onClick={() => setMenuOpen(false)} active={location.pathname === "/"} />
             <MobileSidebarItem to="/novels" icon={<RiBook3Line />} label="Explore" onClick={() => setMenuOpen(false)} active={location.pathname === "/novels"} />
             <MobileSidebarItem to="/library" icon={<RiBookmarkLine />} label="Library" onClick={() => setMenuOpen(false)} active={location.pathname === "/library"} />
+            <MobileSidebarItem to="/request" icon={<RiEdit2Line />} label="Request" onClick={() => setMenuOpen(false)} active={location.pathname === "/request"} />
             
             {isAuthorOrAdmin && (
               <MobileSidebarItem to="/novel/author/me" icon={<RiFileUploadLine />} label="My Uploads" onClick={() => setMenuOpen(false)} active={location.pathname === "/novel/author/me"} />

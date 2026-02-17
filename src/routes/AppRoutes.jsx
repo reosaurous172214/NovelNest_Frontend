@@ -37,6 +37,9 @@ import AdminAudits from "../pages/admin/AdminAudit";
 import Subscription from "../pages/Subscription";
 import AdminAnalytics from "../pages/admin/AdminAnalytics";
 import ForgotPassword from "../pages/auth/ForgetPassword";
+import TermsOfService from "../pages/TermsOfService";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import UserSafety from "../pages/UserSafety";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -104,6 +107,9 @@ const AppRoutes = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/wallet" element={<Wallet/>}/>
         <Route path="/novels" element={<Novel />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/safety" element={<UserSafety />} />
         <Route path="/auth-success" element={<AuthSuccess />} />
         <Route path="/novel/create" element={<CreateNovel />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />

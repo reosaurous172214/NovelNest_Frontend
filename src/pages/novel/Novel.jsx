@@ -206,7 +206,7 @@ const Novels = () => {
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[var(--accent)] opacity-5 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row gap-12 relative z-10">
-        <aside className="hidden lg:block w-72 shrink-0 sticky top-28 self-start">
+        <aside className="hidden xl:block w-72 shrink-0 sticky top-28 self-start">
           <div
             className={`
       ${glassStyle}
@@ -225,7 +225,7 @@ const Novels = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <button
               onClick={() => setShowFilters(true)}
-              className="lg:hidden flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[var(--text-main)] text-[var(--bg-primary)] text-[10px] font-black tracking-widest uppercase"
+              className="xl:hidden flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[var(--text-main)] text-[var(--bg-primary)] text-[10px] font-black tracking-widest uppercase"
             >
               <Filter size={14} /> Filters
             </button>
