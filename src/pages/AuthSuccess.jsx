@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const AuthSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  const {login} = useAuth();
   useEffect(() => {
     // 1. Extract the token from the URL (sent from backend)
     const token = searchParams.get("token");
@@ -12,7 +13,7 @@ const AuthSuccess = () => {
     if (token) {
       // 2. Save to localStorage so your Axios interceptors can find it
       localStorage.setItem("token", token);
-      
+      login({},token);
       // 3. Optional: Trigger a state update in your AuthContext here
       // dispatch({ type: 'LOGIN_SUCCESS', payload: token });
 
@@ -22,7 +23,7 @@ const AuthSuccess = () => {
       // Handle error if no token is found
       navigate("/login?error=no_token");
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, login]);
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center">
