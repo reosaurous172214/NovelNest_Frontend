@@ -7,7 +7,6 @@ import {
   LuClock,
   LuRefreshCw,
   LuTrash2,
-  LuX,
   LuBook
 } from "react-icons/lu";
 import { getAllLogs } from "../../api/apiAdmin";
