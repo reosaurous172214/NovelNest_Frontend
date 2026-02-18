@@ -15,6 +15,8 @@ import { useAlert } from "../../context/AlertContext";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 
 export default function AdminAuditLedger() {
+  const API_URL = process.env.REACT_APP_API_URL;
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
@@ -23,25 +25,27 @@ export default function AdminAuditLedger() {
 
   const { showAlert } = useAlert();
 
-  /* ---------------- FETCH LOGS ---------------- */
+  /* ================= FETCH LOGS ================= */
 
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllLogs();
       setLogs(Array.isArray(data) ? data : data?.data || []);
-    } catch {
+    } catch (error) {
+      console.error("Fetch logs error:", error);
+      showAlert("Failed to load activity logs.", "error");
       setLogs([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showAlert]);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  /* ---------------- DELETE LOG(S) ---------------- */
+  /* ================= DELETE LOG(S) ================= */
 
   const executeDeletion = async () => {
     const isBulk = !selectedLogId;
@@ -50,25 +54,28 @@ export default function AdminAuditLedger() {
     try {
       setLoading(true);
 
-      await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/admin/logs`,
-        {
-          data: isBulk
-            ? { clearAll: true }
-            : { logIds: [selectedLogId] },
-          ...getHeaders()
-        }
-      );
+      await axios.delete(`${API_URL}/api/admin/logs`, {
+        data: isBulk
+          ? { clearAll: true }
+          : { logIds: [selectedLogId] },
+        ...getHeaders()
+      });
 
       showAlert(
         isBulk
           ? "All logs cleared successfully."
-          : "Log entry deleted.",
+          : "Log entry deleted successfully.",
         "success"
       );
 
-      fetchLogs();
-    } catch {
+      // Optimistic UI update
+      if (isBulk) {
+        setLogs([]);
+      } else {
+        setLogs((prev) => prev.filter((log) => log._id !== selectedLogId));
+      }
+    } catch (error) {
+      console.error("Delete logs error:", error);
       showAlert("Could not delete logs.", "error");
     } finally {
       setLoading(false);
@@ -76,7 +83,7 @@ export default function AdminAuditLedger() {
     }
   };
 
-  /* ---------------- FILTERING ---------------- */
+  /* ================= FILTERING ================= */
 
   const filteredLogs = useMemo(() => {
     if (filter === "ALL") return logs;
@@ -93,7 +100,14 @@ export default function AdminAuditLedger() {
     });
   }, [logs, filter]);
 
-  /* ---------------- LOADING STATE ---------------- */
+  /* ================= HELPERS ================= */
+
+  const buildImageUrl = (path) => {
+    if (!path) return null;
+    return path.startsWith("http") ? path : `${API_URL}${path}`;
+  };
+
+  /* ================= LOADING STATE ================= */
 
   if (loading) {
     return (
@@ -107,7 +121,7 @@ export default function AdminAuditLedger() {
     );
   }
 
-  /* ---------------- RENDER ---------------- */
+  /* ================= RENDER ================= */
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8">
@@ -116,10 +130,7 @@ export default function AdminAuditLedger() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-[var(--border)] pb-8 pt-10">
         <div>
           <h2 className="text-3xl font-bold flex items-center gap-3 text-[var(--text-main)]">
-            <LuHistory
-              className="text-[var(--accent)]"
-              size={28}
-            />
+            <LuHistory className="text-[var(--accent)]" size={28} />
             Activity Logs
           </h2>
           <p className="text-[var(--text-dim)] text-sm mt-1">
@@ -146,7 +157,7 @@ export default function AdminAuditLedger() {
             ))}
           </div>
 
-          {/* ACTIONS */}
+          {/* CLEAR ALL */}
           <button
             onClick={() => {
               setSelectedLogId(null);
@@ -158,6 +169,7 @@ export default function AdminAuditLedger() {
             Clear All
           </button>
 
+          {/* REFRESH */}
           <button
             onClick={fetchLogs}
             className="p-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-dim)] hover:text-[var(--accent)] transition-all"
@@ -167,9 +179,8 @@ export default function AdminAuditLedger() {
         </div>
       </div>
 
-      {/* LOG CARDS */}
+      {/* LOG LIST */}
       <div className="grid gap-4">
-
         {filteredLogs.length === 0 ? (
           <div className="py-20 text-center bg-[var(--bg-secondary)] border border-dashed border-[var(--border)] rounded-2xl">
             <LuHistory
@@ -223,24 +234,17 @@ export default function AdminAuditLedger() {
                   <LuTrash2 size={14} />
                 </button>
 
-                {/* ADMIN INFO */}
+                {/* ADMIN */}
                 <div className="flex items-center gap-4 min-w-[240px] w-full lg:w-auto">
                   <div className="w-12 h-12 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
                     {adminId?.profilePicture ? (
                       <img
-                        src={
-                          adminId.profilePicture.startsWith("http")
-                            ? adminId.profilePicture
-                            : `${process.env.REACT_APP_API_URL}${adminId.profilePicture}`
-                        }
+                        src={buildImageUrl(adminId.profilePicture)}
                         className="w-full h-full object-cover"
                         alt="Admin"
                       />
                     ) : (
-                      <LuUser
-                        size={20}
-                        className="text-[var(--text-dim)]"
-                      />
+                      <LuUser size={20} className="text-[var(--text-dim)]" />
                     )}
                   </div>
 
@@ -274,19 +278,12 @@ export default function AdminAuditLedger() {
                       <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] overflow-hidden flex items-center justify-center">
                         {displayImage ? (
                           <img
-                            src={
-                              displayImage.startsWith("http")
-                                ? displayImage
-                                : `${process.env.REACT_APP_API_URL}${displayImage}`
-                            }
+                            src={buildImageUrl(displayImage)}
                             className="w-full h-full object-cover"
                             alt=""
                           />
                         ) : (
-                          <LuBook
-                            size={14}
-                            className="text-[var(--text-dim)]"
-                          />
+                          <LuBook size={14} className="text-[var(--text-dim)]" />
                         )}
                       </div>
 
@@ -303,10 +300,7 @@ export default function AdminAuditLedger() {
                     </p>
 
                     <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-main)]">
-                      <LuClock
-                        className="text-[var(--accent)]"
-                        size={14}
-                      />
+                      <LuClock className="text-[var(--accent)]" size={14} />
                       <span>{date.toLocaleDateString()}</span>
                       <span className="text-[var(--text-dim)] text-xs">
                         {date.toLocaleTimeString([], {
@@ -332,6 +326,7 @@ export default function AdminAuditLedger() {
         )}
       </div>
 
+      {/* CONFIRM MODAL */}
       <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => {
