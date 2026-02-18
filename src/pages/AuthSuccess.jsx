@@ -11,13 +11,7 @@ const AuthSuccess = () => {
     const token = searchParams.get("token");
 
     if (token) {
-      // 2. Save to localStorage so your Axios interceptors can find it
-      localStorage.setItem("token", token);
       login({},token);
-      // 3. Optional: Trigger a state update in your AuthContext here
-      // dispatch({ type: 'LOGIN_SUCCESS', payload: token });
-
-      // 4. Redirect to home or dashboard
       navigate("/");
     } else {
       // Handle error if no token is found
@@ -31,7 +25,7 @@ const AuthSuccess = () => {
         {/* Your Frosted Glass Loading Spinner */}
         <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>
         <p className="mt-4 text-white/60 font-medium tracking-widest uppercase text-xs">
-          Authenticating with NovelHub...
+          Authenticating with NovelNest...
         </p>
       </div>
     </div>

@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import axios from "axios";
 
 const AuthContext = createContext(null);
@@ -10,7 +16,7 @@ export function AuthProvider({ children }) {
 
   const checkUserStatus = useCallback(async () => {
     const token = localStorage.getItem("token");
-    
+
     if (!token) {
       setUser(null);
       setWallet(null);
@@ -23,9 +29,11 @@ export function AuthProvider({ children }) {
         axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`${process.env.REACT_APP_API_URL}/api/payments/wallet`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => ({ data: null })) // Prevent wallet failure from breaking user load
+        axios
+          .get(`${process.env.REACT_APP_API_URL}/api/payments/wallet`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .catch(() => ({ data: null })), // Prevent wallet failure from breaking user load
       ]);
 
       if (userRes.data) {
@@ -37,7 +45,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Auth sync failed:", err);
       if (err.response?.status === 401 || err.response?.status === 403) {
-        logout(); 
+        logout();
       }
     } finally {
       setLoading(false);
@@ -49,20 +57,24 @@ export function AuthProvider({ children }) {
     checkUserStatus();
   }, [checkUserStatus]);
 
-  const login = (userData, token) => {
-    // 1. Clear everything to prevent leakage
-    localStorage.removeItem("data");
-    
-    // 2. Set new credentials
-    if (token) localStorage.setItem("token", token);
-    localStorage.setItem("data", JSON.stringify(userData));
-    
-    // 3. Update state
-    setUser(userData);
-    
-    // 4. Force a fresh status check to get wallet and verify token
-    checkUserStatus();
-  };
+  // Inside AuthProvider
+  const login = useCallback(
+    (userData, token) => {
+      // 1. Clear old data
+      localStorage.removeItem("data");
+
+      // 2. Set new credentials
+      if (token) localStorage.setItem("token", token);
+      localStorage.setItem("data", JSON.stringify(userData));
+
+      // 3. Update state
+      setUser(userData);
+
+      // 4. Trigger the status check (which you also likely wrapped in useCallback)
+      checkUserStatus();
+    },
+    [checkUserStatus],
+  ); // Only re-create if checkUserStatus changes
 
   const logout = () => {
     localStorage.clear(); // Safer to clear all for a fresh start
@@ -81,13 +93,15 @@ export function AuthProvider({ children }) {
         logout,
         loading,
         isAuthenticated: !!user,
-        refreshUser: checkUserStatus
+        refreshUser: checkUserStatus,
       }}
     >
       {/* Only show app when loading is false to prevent flashing old state */}
-      {!loading ? children : (
+      {!loading ? (
+        children
+      ) : (
         <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-           <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
     </AuthContext.Provider>
