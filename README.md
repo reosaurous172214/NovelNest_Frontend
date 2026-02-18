@@ -9,7 +9,7 @@ This repository contains the **React frontend client** that connects to a **Node
 
 ## ✨ Live Features
 
-🎬 **Live Demo:** [https://novelnest.live](https://novelnest.live)  
+🎬 **Live Demo:** [NovelNest](https://novel-nest-frontend-yg2s.vercel.app/)
 
 ### 📖 Reading Experience
 - Browse and explore novels
