@@ -57,24 +57,35 @@ export function AuthProvider({ children }) {
     checkUserStatus();
   }, [checkUserStatus]);
 
-  // Inside AuthProvider
   const login = useCallback(
-    (userData, token) => {
-      // 1. Clear old data
-      localStorage.removeItem("data");
+    async (userData, token) => {
+      try {
+        setLoading(true);
 
-      // 2. Set new credentials
-      if (token) localStorage.setItem("token", token);
-      localStorage.setItem("data", JSON.stringify(userData));
+        // 1. Clear old data safely (don't wipe everything)
+        localStorage.removeItem("data");
 
-      // 3. Update state
-      setUser(userData);
+        // 2. Store token if provided
+        if (token) {
+          localStorage.setItem("token", token);
+        }
 
-      // 4. Trigger the status check (which you also likely wrapped in useCallback)
-      checkUserStatus();
+        // 3. If userData exists (email login case), set immediately
+        if (userData && Object.keys(userData).length > 0) {
+          setUser(userData);
+          localStorage.setItem("data", JSON.stringify(userData));
+        }
+
+        // 4. Sync fresh data from server (await to prevent race condition)
+        await checkUserStatus();
+      } catch (err) {
+        console.error("Login failed:", err);
+      } finally {
+        setLoading(false);
+      }
     },
     [checkUserStatus],
-  ); // Only re-create if checkUserStatus changes
+  );
 
   const logout = () => {
     localStorage.clear(); // Safer to clear all for a fresh start

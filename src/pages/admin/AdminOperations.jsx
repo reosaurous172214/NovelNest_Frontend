@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import {
   LuHistory,
@@ -19,16 +19,18 @@ export default function AdminAuditLedger() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [selectedLogId, setSelectedLogId] = useState(null); 
+  const [selectedLogId, setSelectedLogId] = useState(null);
+
   const { showAlert } = useAlert();
+
+  /* ---------------- FETCH LOGS ---------------- */
 
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllLogs();
-      const registryData = Array.isArray(data) ? data : data?.data || [];
-      setLogs(registryData);
-    } catch (e) {
+      setLogs(Array.isArray(data) ? data : data?.data || []);
+    } catch {
       setLogs([]);
     } finally {
       setLoading(false);
@@ -39,20 +41,34 @@ export default function AdminAuditLedger() {
     fetchLogs();
   }, [fetchLogs]);
 
+  /* ---------------- DELETE LOG(S) ---------------- */
+
   const executeDeletion = async () => {
     const isBulk = !selectedLogId;
     setIsConfirmOpen(false);
-    
+
     try {
       setLoading(true);
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/admin/logs`, {
-        data: isBulk ? { clearAll: true } : { logIds: [selectedLogId] },
-        ...getHeaders()
-      });
-      
-      showAlert(isBulk ? "All logs cleared successfully." : "Log entry deleted.", "success");
+
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/admin/logs`,
+        {
+          data: isBulk
+            ? { clearAll: true }
+            : { logIds: [selectedLogId] },
+          ...getHeaders()
+        }
+      );
+
+      showAlert(
+        isBulk
+          ? "All logs cleared successfully."
+          : "Log entry deleted.",
+        "success"
+      );
+
       fetchLogs();
-    } catch (err) {
+    } catch {
       showAlert("Could not delete logs.", "error");
     } finally {
       setLoading(false);
@@ -60,31 +76,51 @@ export default function AdminAuditLedger() {
     }
   };
 
-  const filteredLogs = logs.filter((log) => {
-    if (filter === "ALL") return true;
-    if (filter === "MODERATION")
-      return log.actionType.includes("BAN") || log.actionType.includes("DELETE");
-    if (filter === "SYSTEM")
-      return !log.actionType.includes("BAN") && !log.actionType.includes("DELETE");
-    return true;
-  });
+  /* ---------------- FILTERING ---------------- */
 
-  if (loading)
+  const filteredLogs = useMemo(() => {
+    if (filter === "ALL") return logs;
+
+    return logs.filter((log) => {
+      const isModeration =
+        log.actionType?.includes("BAN") ||
+        log.actionType?.includes("DELETE");
+
+      if (filter === "MODERATION") return isModeration;
+      if (filter === "SYSTEM") return !isModeration;
+
+      return true;
+    });
+  }, [logs, filter]);
+
+  /* ---------------- LOADING STATE ---------------- */
+
+  if (loading) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center gap-3 p-12 text-sm font-medium text-[var(--text-dim)]">
-        <LuActivity className="animate-spin text-[var(--accent)]" size={24} />
+        <LuActivity
+          className="animate-spin text-[var(--accent)]"
+          size={24}
+        />
         <span>Loading activity logs...</span>
       </div>
     );
+  }
+
+  /* ---------------- RENDER ---------------- */
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8">
-      
-      {/* HEADER SECTION */}
+
+      {/* HEADER */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-[var(--border)] pb-8 pt-10">
         <div>
           <h2 className="text-3xl font-bold flex items-center gap-3 text-[var(--text-main)]">
-            <LuHistory className="text-[var(--accent)]" size={28} /> Activity Logs
+            <LuHistory
+              className="text-[var(--accent)]"
+              size={28}
+            />
+            Activity Logs
           </h2>
           <p className="text-[var(--text-dim)] text-sm mt-1">
             Track all administrative actions taken on the platform.
@@ -92,6 +128,7 @@ export default function AdminAuditLedger() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+
           {/* FILTERS */}
           <div className="flex bg-[var(--bg-secondary)] border border-[var(--border)] p-1 rounded-xl shadow-sm">
             {["ALL", "MODERATION", "SYSTEM"].map((type) => (
@@ -99,9 +136,9 @@ export default function AdminAuditLedger() {
                 key={type}
                 onClick={() => setFilter(type)}
                 className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filter === type 
-                  ? "bg-[var(--accent)] text-white shadow-md" 
-                  : "text-[var(--text-dim)] hover:text-[var(--text-main)]"
+                  filter === type
+                    ? "bg-[var(--accent)] text-white shadow-md"
+                    : "text-[var(--text-dim)] hover:text-[var(--text-main)]"
                 }`}
               >
                 {type}
@@ -110,14 +147,19 @@ export default function AdminAuditLedger() {
           </div>
 
           {/* ACTIONS */}
-          <button 
-            onClick={() => { setSelectedLogId(null); setIsConfirmOpen(true); }}
+          <button
+            onClick={() => {
+              setSelectedLogId(null);
+              setIsConfirmOpen(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 text-xs font-bold hover:bg-rose-600 hover:text-white transition-all"
           >
-            <LuTrash2 size={14} /> Clear All
+            <LuTrash2 size={14} />
+            Clear All
           </button>
-          <button 
-            onClick={fetchLogs} 
+
+          <button
+            onClick={fetchLogs}
             className="p-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-dim)] hover:text-[var(--accent)] transition-all"
           >
             <LuRefreshCw size={18} />
@@ -125,21 +167,57 @@ export default function AdminAuditLedger() {
         </div>
       </div>
 
-      {/* LOG LIST */}
-      <div className="grid grid-cols-1 gap-4">
-        {filteredLogs.length > 0 ? (
+      {/* LOG CARDS */}
+      <div className="grid gap-4">
+
+        {filteredLogs.length === 0 ? (
+          <div className="py-20 text-center bg-[var(--bg-secondary)] border border-dashed border-[var(--border)] rounded-2xl">
+            <LuHistory
+              size={40}
+              className="mx-auto text-[var(--border)] mb-4"
+            />
+            <p className="text-sm font-medium text-[var(--text-dim)]">
+              No activity logs found yet.
+            </p>
+          </div>
+        ) : (
           filteredLogs.map((log) => {
-            const displayName = log.targetMetadata?.name || "Unknown Target";
-            const displayImage = log.targetId?.profilePicture || log.targetId?.coverImage || log.targetMetadata?.image;
+            const {
+              _id,
+              adminId,
+              actionType,
+              timestamp,
+              reason,
+              targetMetadata,
+              targetId
+            } = log;
+
+            const displayName =
+              targetMetadata?.name || "Unknown Target";
+
+            const displayImage =
+              targetId?.profilePicture ||
+              targetId?.coverImage ||
+              targetMetadata?.image;
+
+            const date = new Date(timestamp);
+
+            const isModeration =
+              actionType?.includes("BAN") ||
+              actionType?.includes("DELETE");
 
             return (
-              <div 
-                key={log._id} 
+              <div
+                key={_id}
                 className="group relative bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl hover:border-[var(--accent)]/50 transition-all flex flex-col lg:flex-row items-center gap-6"
               >
+
                 {/* DELETE BUTTON */}
-                <button 
-                  onClick={() => { setSelectedLogId(log._id); setIsConfirmOpen(true); }}
+                <button
+                  onClick={() => {
+                    setSelectedLogId(_id);
+                    setIsConfirmOpen(true);
+                  }}
                   className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--text-dim)] hover:text-rose-500 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <LuTrash2 size={14} />
@@ -148,39 +226,70 @@ export default function AdminAuditLedger() {
                 {/* ADMIN INFO */}
                 <div className="flex items-center gap-4 min-w-[240px] w-full lg:w-auto">
                   <div className="w-12 h-12 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
-                    {log.adminId?.profilePicture ? (
-                      <img 
-                        src={log.adminId.profilePicture.startsWith("http") ? log.adminId.profilePicture : `${process.env.REACT_APP_API_URL}${log.adminId.profilePicture}`} 
-                        className="w-full h-full object-cover" alt="Admin" 
+                    {adminId?.profilePicture ? (
+                      <img
+                        src={
+                          adminId.profilePicture.startsWith("http")
+                            ? adminId.profilePicture
+                            : `${process.env.REACT_APP_API_URL}${adminId.profilePicture}`
+                        }
+                        className="w-full h-full object-cover"
+                        alt="Admin"
                       />
-                    ) : <LuUser size={20} className="text-[var(--text-dim)]" />}
+                    ) : (
+                      <LuUser
+                        size={20}
+                        className="text-[var(--text-dim)]"
+                      />
+                    )}
                   </div>
+
                   <div>
-                    <p className="text-xs font-bold text-[var(--text-main)]">{log.adminId?.username || "System"}</p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
-                      log.actionType.includes("BAN") || log.actionType.includes("DELETE") 
-                      ? "text-rose-500 border-rose-500/20 bg-rose-500/5" 
-                      : "text-blue-500 border-blue-500/20 bg-blue-500/5"
-                    }`}>
-                      {log.actionType.replace(/_/g, " ")}
+                    <p className="text-xs font-bold text-[var(--text-main)]">
+                      {adminId?.username || "System"}
+                    </p>
+
+                    <span
+                      className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                        isModeration
+                          ? "text-rose-500 border-rose-500/20 bg-rose-500/5"
+                          : "text-blue-500 border-blue-500/20 bg-blue-500/5"
+                      }`}
+                    >
+                      {actionType?.replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
 
-                {/* TARGET & TIME DETAILS */}
+                {/* TARGET + TIME */}
                 <div className="flex-1 flex flex-col sm:flex-row items-center gap-8 w-full lg:border-l lg:border-[var(--border)] lg:pl-8">
+
                   {/* TARGET */}
                   <div className="min-w-[180px]">
-                    <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Target</p>
+                    <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">
+                      Target
+                    </p>
+
                     <div className="flex items-center gap-3">
                       <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] overflow-hidden flex items-center justify-center">
                         {displayImage ? (
-                          <img 
-                            src={displayImage.startsWith("http") ? displayImage : `${process.env.REACT_APP_API_URL}${displayImage}`} 
-                            className="w-full h-full object-cover" alt="" 
+                          <img
+                            src={
+                              displayImage.startsWith("http")
+                                ? displayImage
+                                : `${process.env.REACT_APP_API_URL}${displayImage}`
+                            }
+                            className="w-full h-full object-cover"
+                            alt=""
                           />
-                        ) : <LuBook size={14} className="text-[var(--text-dim)]" />}
+                        ) : (
+                          <LuBook
+                            size={14}
+                            className="text-[var(--text-dim)]"
+                          />
+                        )}
                       </div>
+
                       <span className="text-sm font-semibold text-[var(--text-main)] truncate max-w-[140px]">
                         {displayName}
                       </span>
@@ -189,40 +298,53 @@ export default function AdminAuditLedger() {
 
                   {/* TIME */}
                   <div>
-                    <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Timestamp</p>
+                    <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">
+                      Timestamp
+                    </p>
+
                     <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-main)]">
-                      <LuClock className="text-[var(--accent)]" size={14} />
-                      <span>{new Date(log.timestamp).toLocaleDateString()}</span>
+                      <LuClock
+                        className="text-[var(--accent)]"
+                        size={14}
+                      />
+                      <span>{date.toLocaleDateString()}</span>
                       <span className="text-[var(--text-dim)] text-xs">
-                        {new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {date.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* REASON MESSAGE */}
+                {/* REASON */}
                 <div className="w-full lg:w-1/3 bg-[var(--bg-primary)]/50 p-3 rounded-xl border border-[var(--border)]">
                   <p className="text-xs text-[var(--text-dim)] font-medium italic">
-                    {log.reason ? `"${log.reason}"` : "No specific reason provided."}
+                    {reason
+                      ? `"${reason}"`
+                      : "No specific reason provided."}
                   </p>
                 </div>
               </div>
             );
           })
-        ) : (
-          <div className="py-20 text-center bg-[var(--bg-secondary)] border border-dashed border-[var(--border)] rounded-2xl">
-            <LuHistory size={40} className="mx-auto text-[var(--border)] mb-4" />
-            <p className="text-sm font-medium text-[var(--text-dim)]">No activity logs found yet.</p>
-          </div>
         )}
       </div>
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        onClose={() => { setIsConfirmOpen(false); setSelectedLogId(null); }}
+        onClose={() => {
+          setIsConfirmOpen(false);
+          setSelectedLogId(null);
+        }}
         onConfirm={executeDeletion}
         title={selectedLogId ? "Delete Entry" : "Clear All Logs"}
-        message={selectedLogId ? "Are you sure you want to delete this log entry?" : "This will permanently delete all activity history. Proceed?"}
+        message={
+          selectedLogId
+            ? "Are you sure you want to delete this log entry?"
+            : "This will permanently delete all activity history. Proceed?"
+        }
         confirmText={selectedLogId ? "Delete" : "Clear Everything"}
         type="danger"
       />
