@@ -78,7 +78,7 @@ src/
 
 ### 1️⃣ Clone
 ```bash
-git clone https://github.com/reosaurous172214/NovelNest_Frontend.git
+git clone https://github.com/SaurabhSharma1369/NovelNest_Frontend.git
 cd novelnest-frontend
 ```
 
